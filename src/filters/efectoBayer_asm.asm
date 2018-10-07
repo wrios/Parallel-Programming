@@ -8,7 +8,7 @@ section .text
 efectoBayer_asm:
 	;i rdi = *src, img in
 	;i rsi = *dst, img out
-	;i edx = filas; POR QUE ESTO ES 0 ?????
+	;i edx = filas;
 	;i ecx = columnas
 	;i r8d = srr_row_size
 	;rbx = *src
@@ -21,10 +21,10 @@ efectoBayer_asm:
 	push r12
 	;sub rsp, 8
 	
+	mov rbx, rdi
 	mov r12d, edx
 	movdqu xmm10, [mask_rvrv]
 	movdqu xmm11, [mask_vava]
-	;shr ecx, 3; ecx /= 8
 
 	;recorro todas las filas
 	mov r10d, 0
@@ -46,7 +46,7 @@ efectoBayer_asm:
 		movdqu xmm0, [rbx + rdi]; xmm0 = [rgba|rgba|rgba|rgba]
 		pshufb xmm0, xmm10; xmm0 = [r000|0g00|r000|0g00]
 		;se lo cargo a la img out
-		movdqu [rsi + rdi], xmm0; movdqu esta bien?
+		movdqu [rsi + rdi], xmm0
 		;sigo iterando
 		add r11d, 16
 		jmp ciclo_fila_actual
@@ -66,12 +66,11 @@ efectoBayer_asm:
 		mov edi, r10d
 		mov eax, ecx
 		mul edi; edi = n*r10d
-		shr edi, 3; *=8
 		add edi, r11d; edi = n * fil pasadas + indice col
 		movdqu xmm0, [rbx + rdi]; xmm0 = [rgba|rgba|rgba|rgba]
 		pshufb xmm0, xmm11; xmm0 = [0g00|00b0|0g00|00b0]
 		;se lo cargo a la img out
-		movdqu [rsi + rdi], xmm0; movdqu esta bien ?
+		movdqu [rsi + rdi], xmm0
 		;si sigo iterando
 		add r11d, 16
 		jmp ciclo_fila_actual_2
@@ -93,7 +92,5 @@ efectoBayer_asm:
 		pop rbx
 		pop rbp
 		ret
-
-
 
 
