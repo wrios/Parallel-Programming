@@ -11,93 +11,70 @@ efectoBayer_asm:
 	;i edx = filas;
 	;i ecx = columnas
 	;i r8d = srr_row_size
-	;rbx = *src
-	;r12d = edx = filas (mul pisa edx)
 
 	;stack frame
 	push rbp ;a
 	mov rbp, rsp
-	push rbx ;d
-	push r12
 	;sub rsp, 8
 	
-	mov rbx, rdi
-	mov r12d, edx
 	movdqu xmm10, [mask_rvrv]
 	movdqu xmm11, [mask_vava]
 
 	;recorro todas las filas
 	mov r10d, 0
 	ciclo_filas_bayer:
-	cmp r10d, r12d; r10d = fila actual
-	je termino_ciclo_filas_bayer
+		cmp r10d, edx; r10d = fila actual
+		je termino_ciclo_filas_bayer
 		;recorro esta fila
-		mov r11d, 0
-		ciclo_fila_actual:
-		
-		cmp r11d, ecx; r11d = columna actual
-		je termino_ciclo_fila_actual
-		;calculo indice actual
-		mov edi, r10d
-		mov eax, ecx
-		mul edi; edi = n*r10d
-		add edi, r11d; edi = n * fil actual + indice col
-		mov edi, edi
-		movdqu xmm0, [rbx + rdi]; xmm0 = [rgba|rgba|rgba|rgba]
-		pshufb xmm0, xmm10; xmm0 = [r000|0g00|r000|0g00]
-		;se lo cargo a la img out
-			;;movdqu [rsi + rdi], xmm0
+			mov r11d, 0
+			ciclo_fila_actual:
+			
+			cmp r11d, ecx; r11d = columna actual
+			je termino_ciclo_fila_actual
+
+			movdqu xmm0, [rdi]; xmm0 = [rgba|rgba|rgba|rgba]
+			pshufb xmm0, xmm10; xmm0 = [r000|0g00|r000|0g00]
+			;se lo cargo a la img out
 			movdqu [rsi], xmm0;;
+			;sigo iterando
 			add rsi, 16;;
-		;sigo iterando
-		add r11d, 16
-		jmp ciclo_fila_actual
+			add rdi, 16;;
+			add r11d, 16
+			jmp ciclo_fila_actual
 		termino_ciclo_fila_actual:
 
 		;si era la ultima fila
 		inc r10d
-		cmp r10d, r12d
+		cmp r10d, edx
 		je termino_ciclo_filas_bayer
 		
 		;recorro la siguiente fila
-		mov r11d, 0
-		ciclo_fila_actual_2:
-		cmp r11d, ecx; r11d = col actual
-		je termino_ciclo_fila_actual_2
-		;calculo indice actual
-		mov edi, r10d
-		mov eax, ecx
-		mul edi; edi = n*r10d
-		add edi, r11d; edi = n * fil pasadas + indice col
-		movdqu xmm0, [rbx + rdi]; xmm0 = [rgba|rgba|rgba|rgba]
-		pshufb xmm0, xmm11; xmm0 = [0g00|00b0|0g00|00b0]
-		;se lo cargo a la img out
-			;;movdqu [rsi + rdi], xmm0
+			mov r11d, 0
+			ciclo_fila_actual_2:
+			cmp r11d, ecx; r11d = col actual
+			je termino_ciclo_fila_actual_2
+			
+			movdqu xmm0, [rdi]; xmm0 = [rgba|rgba|rgba|rgba]
+			pshufb xmm0, xmm11; xmm0 = [0g00|00b0|0g00|00b0]
+			;se lo cargo a la img out
 			movdqu [rsi], xmm0;;
+			;si sigo iterando
 			add rsi, 16;;
-		;si sigo iterando
-		add r11d, 16
-		jmp ciclo_fila_actual_2
+			add rdi, 16;;
+			add r11d, 16
+			jmp ciclo_fila_actual_2
 		termino_ciclo_fila_actual_2:
 		
-		;si era la ultima fila
+		;incremento fila
 		inc r10d
-		cmp r10d, r12d
-		je termino_ciclo_filas_bayer
-		
 		;vuelvo a hacer "dos" filas
-		mov r11d, 0
-		jmp ciclo_fila_actual
+		jmp ciclo_filas_bayer
 		
 	termino_ciclo_filas_bayer:
 		
 		;fin
-		pop r12
-		pop rbx
 		pop rbp
 		ret
-
-
 
 
 
