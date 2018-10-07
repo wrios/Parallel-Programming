@@ -40,10 +40,11 @@ efectoBayer_asm:
 		movdqu xmm0, [rbx + rdi]; xmm0 = [rgba|rgba|rgba|rgba]
 		pshufb xmm0, xmm10; xmm0 = [r000|0g00|r000|0g00]
 		;se lo cargo a la img out
-		movdqu [rsi + edi], xmm0
+		movdqu [rsi + rdi], xmm0
 		;sigo iterando
 		inc r11d
 		jmp ciclo_fila_actual
+		termino_ciclo_fila_actual:
 
 		inc r10d
 		cmp r10d, edx
@@ -59,18 +60,20 @@ efectoBayer_asm:
 		mul edi; edi = n*r10d
 		shr edi, 3; *=8
 		add edi, r11d; edi = n * fil pasadas + indice col
-		movdqu xmm0, [rbx + edi]; xmm0 = [rgba|rgba|rgba|rgba]
+		movdqu xmm0, [rbx + rdi]; xmm0 = [rgba|rgba|rgba|rgba]
 		pshufb xmm0, xmm11; xmm0 = [0g00|00b0|0g00|00b0]
 		;se lo cargo a la img out
 		movdqu [rsi + rdi], xmm0
 		;sigo iterando
 		inc r11d
 		jmp ciclo_fila_actual_2
+		termino_ciclo_fila_actual_2:
 	termino_ciclo_filas_bayer:
 		
 		;fin
 		pop rbx
 		pop rbp
 		ret
+
 
 
