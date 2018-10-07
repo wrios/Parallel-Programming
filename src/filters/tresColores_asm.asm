@@ -55,15 +55,15 @@ add rax, rdi; en rax termina la imagen
     ;vuelvo a int
     cvtps2dq xmm1, xmm1
     ; xmm1 = [0 0 0 W_1 | 0 0 0 W_2 | 0 0 0 W_3 | 0 0 0 W_4] en int
-    pcmpgtd xmm1, cientoCiencuentaYNueve ; cada W_i > 169 (>= 170)
+    pcmpgtd xmm1, [cientoCiencuentaYNueve] ; cada W_i > 169 (>= 170)
     ; en xmm0 algo así [FFFF|0000|FFFF|FFFF] (ej.)
-    pxor xmm0, muchasF
+    pxor xmm0, [muchasF]
     ; en xmm0 tengo 0 donde elto falsos y -1 donde true
-    mov xmm2, crema; guardo en otro registro para no perder los valores
+    movdqu xmm2, [crema]; guardo en otro registro para no perder los valores
     pand xmm2, xmm0 ; me quedo solo con los valores que me dieron true
     ; en xmm2 tengo los valores de "crema" en cada pixel que debería
 
-    pcmpgtd xmm1, ochentaYCinco
+    pcmpgtd xmm1, [ochentaYCinco]
     ; NOT = 1111 XOR xmmAlgo
     
 
