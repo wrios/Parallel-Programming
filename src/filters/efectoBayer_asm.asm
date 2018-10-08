@@ -41,12 +41,12 @@ efectoBayer_asm:
 					
 					cmp r11d, ecx; r11d = columna actual
 					je termino_ciclo_fila_actual
-					movdqu xmm0, [rdi]; xmm0 = [rgba|rgba|rgba|rgba]
+					movdqu xmm0, [rdi];
 					
 						;elijo mask rojo o verde
-						cmp r8, 0
-						je rojo
-						cmp r8, 2
+						mov r9d, r11d
+						and r9d, 1; r8d = r8d%2
+						cmp r9d, 0
 						je rojo
 						pshufb xmm0, xmm12;[VERDE]
 						jmp termino_filtro2
@@ -82,12 +82,12 @@ efectoBayer_asm:
 					cmp r11d, ecx; r11d = col actual
 					je termino_ciclo_fila_actual_2
 					
-					movdqu xmm0, [rdi]; xmm0 = [rgba|rgba|rgba|rgba]
+					movdqu xmm0, [rdi];
 					
 						;elijo mask verde o azul
-						cmp r8, 0
-						je verde
-						cmp r8, 2
+						mov r9d, r11d
+						and r9d, 1; r8d = r8d%2
+						cmp r9d, 0
 						je verde
 						pshufb xmm0, xmm10;[AZUL]
 						jmp termino_filtro
@@ -121,8 +121,6 @@ efectoBayer_asm:
 		;fin
 		pop rbp
 		ret
-
-
 
 
 
