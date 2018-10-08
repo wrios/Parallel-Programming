@@ -43,18 +43,18 @@ efectoBayer_asm:
 					je termino_ciclo_fila_actual
 					movdqu xmm0, [rdi];
 					
-						;elijo mask rojo o verde
+						;elijo mask verde o azul
 						mov r9d, r11d
 						and r9d, 1; r8d = r8d%2
 						cmp r9d, 0
-						je rojo
+						je verde
+						pshufb xmm0, xmm10;[AZUL]
+						jmp termino_filtro
+						verde:
 						pshufb xmm0, xmm12;[VERDE]
-						jmp termino_filtro2
-						rojo:
-						pshufb xmm0, xmm11;[ROJO]
-						termino_filtro2:
+						termino_filtro:
 						;termino de aplicar mask
-					
+										
 					;se lo cargo a la img out
 					movdqu [rsi], xmm0;;
 					;sigo iterando
@@ -84,16 +84,16 @@ efectoBayer_asm:
 					
 					movdqu xmm0, [rdi];
 					
-						;elijo mask verde o azul
+						;elijo mask rojo o verde
 						mov r9d, r11d
 						and r9d, 1; r8d = r8d%2
 						cmp r9d, 0
-						je verde
-						pshufb xmm0, xmm10;[AZUL]
-						jmp termino_filtro
-						verde:
+						je rojo
 						pshufb xmm0, xmm12;[VERDE]
-						termino_filtro:
+						jmp termino_filtro2
+						rojo:
+						pshufb xmm0, xmm11;[ROJO]
+						termino_filtro2:
 						;termino de aplicar mask
 						
 					;se lo cargo a la img out
