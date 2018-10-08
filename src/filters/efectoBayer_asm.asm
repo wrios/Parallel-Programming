@@ -45,10 +45,32 @@ efectoBayer_asm:
 			jmp ciclo_fila_actual
 		termino_ciclo_fila_actual:
 
-		;si era la ultima fila
+		;inc fila y veo si era la ultima
 		inc r10d
 		cmp r10d, edx
 		je termino_ciclo_filas_bayer
+		
+			;;hago exactamente lo mismo para la proxima fila
+				mov r11d, 0
+			ciclo_fila_actual_repito:
+				
+				cmp r11d, ecx; r11d = columna actual
+				je termino_ciclo_fila_actual_repito
+
+				movdqu xmm0, [rdi]; xmm0 = [rgba|rgba|rgba|rgba]
+				pshufb xmm0, xmm10; xmm0 = [r000|0g00|r000|0g00]
+				;se lo cargo a la img out
+				movdqu [rsi], xmm0;;
+				;sigo iterando
+				add rsi, 16;;
+				add rdi, 16;;
+				add r11d, 16
+				jmp ciclo_fila_actual_repito
+			termino_ciclo_fila_actual_repito:
+			;inc fila y veo si era la ultima
+			inc r10d
+			cmp r10d, edx
+			je termino_ciclo_filas_bayer
 		
 		;recorro la siguiente fila
 			mov r11d, 0
@@ -67,9 +89,31 @@ efectoBayer_asm:
 			jmp ciclo_fila_actual_2
 		termino_ciclo_fila_actual_2:
 		
+			;inc fila y veo si era la ultima
+			inc r10d
+			cmp r10d, edx
+			je termino_ciclo_filas_bayer
+			;;hago exactamente lo mismo para la proxima fila
+				mov r11d, 0
+			ciclo_fila_actual_2repito:
+				
+				cmp r11d, ecx; r11d = columna actual
+				je termino_ciclo_fila_actual_2repito
+
+				movdqu xmm0, [rdi]; xmm0 = [rgba|rgba|rgba|rgba]
+				pshufb xmm0, xmm11; xmm0 = [0g00|00b0|0g00|00b0]
+				;se lo cargo a la img out
+				movdqu [rsi], xmm0;;
+				;sigo iterando
+				add rsi, 16;;
+				add rdi, 16;;
+				add r11d, 16
+				jmp ciclo_fila_actual_2repito
+			termino_ciclo_fila_actual_2repito:
+		
 		;incremento fila
 		inc r10d
-		;vuelvo a hacer "dos" filas
+		;vuelvo a hacer "dos*2" filas
 		jmp ciclo_filas_bayer
 		
 	termino_ciclo_filas_bayer:
@@ -77,6 +121,7 @@ efectoBayer_asm:
 		;fin
 		pop rbp
 		ret
+
 
 
 
