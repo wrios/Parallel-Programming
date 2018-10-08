@@ -2,7 +2,8 @@ global efectoBayer_asm
 
 section .data
 ;mask_rvrv : db 0xFF, 0xFF, 0x2, 0xFF, 0xFF, 0xFF, 0xFF, 0X7, 0xFF, 0xFF, 0XA, 0xFF, 0xFF, 0xFF, 0xFF, 0XF
-mask_rvrv : db 0x2, 0xFF, 0XFF, 0XFF, 0X5, 0xFF, 0XFF, 0XFF, 0x10, 0xFF, 0XFF, 0XFF, 0XD, 0xFF, 0XFF, 0XFF; ?
+mask_rvrv : db  0xFF, 0xFF, 0x2, 0xFF,		0xFF, 0xFF, 0xFF, 0x7, 		0xFF, 0xFF, 0xA, 0xFF, 		0xFF, 0xD, 0xFF, 0xFF
+
 mask_vava : db 0xFF, 0x1, 0xFF, 0xFF, 0xFF, 0xFF, 0X6, 0xFF, 0xFF, 0X9, 0xFF, 0xFF, 0xFF, 0xFF, 0XE, 0xFF
 
 section .text
@@ -18,7 +19,7 @@ efectoBayer_asm:
 	mov rbp, rsp
 	;sub rsp, 8
 	
-	shl edx, 2
+	shr ecx, 2
 	movdqu xmm10, [mask_rvrv]
 	movdqu xmm11, [mask_vava]
 
@@ -41,7 +42,7 @@ efectoBayer_asm:
 			;sigo iterando
 			add rsi, 16;;
 			add rdi, 16;;
-			add r11d, 16
+			inc r11d
 			jmp ciclo_fila_actual
 		termino_ciclo_fila_actual:
 
@@ -64,7 +65,7 @@ efectoBayer_asm:
 				;sigo iterando
 				add rsi, 16;;
 				add rdi, 16;;
-				add r11d, 16
+				inc r11d
 				jmp ciclo_fila_actual_repito
 			termino_ciclo_fila_actual_repito:
 			;inc fila y veo si era la ultima
@@ -85,7 +86,7 @@ efectoBayer_asm:
 			;si sigo iterando
 			add rsi, 16;;
 			add rdi, 16;;
-			add r11d, 16
+			inc r11d
 			jmp ciclo_fila_actual_2
 		termino_ciclo_fila_actual_2:
 		
@@ -107,7 +108,7 @@ efectoBayer_asm:
 				;sigo iterando
 				add rsi, 16;;
 				add rdi, 16;;
-				add r11d, 16
+				inc r11d
 				jmp ciclo_fila_actual_2repito
 			termino_ciclo_fila_actual_2repito:
 		
