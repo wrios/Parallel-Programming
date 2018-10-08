@@ -18,7 +18,7 @@ efectoBayer_asm:
 	mov rbp, rsp
 	;sub rsp, 8
 	
-	;shl edx, 3
+	shl edx, 2
 	movdqu xmm10, [mask_rvrv]
 	movdqu xmm11, [mask_vava]
 
@@ -77,6 +77,7 @@ efectoBayer_asm:
 		;fin
 		pop rbp
 		ret
+
 
 
 
