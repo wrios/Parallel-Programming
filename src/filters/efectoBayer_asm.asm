@@ -60,7 +60,7 @@ efectoBayer_asm:
 						;termino de aplicar mask
 										
 					;se lo cargo a la img out
-					paddw xmm0, xmm15; devuelvo A
+					paddb xmm0, xmm15; devuelvo A
 					movdqu [rsi], xmm0;;
 					;sigo iterando
 					add rsi, 16;;
@@ -104,7 +104,7 @@ efectoBayer_asm:
 						;termino de aplicar mask
 						
 					;se lo cargo a la img out
-					paddw xmm0, xmm15; devuelvo el A
+					paddb xmm0, xmm15; devuelvo el A
 					movdqu [rsi], xmm0;;
 					;si sigo iterando
 					add rsi, 16;;
