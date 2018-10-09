@@ -4,7 +4,7 @@ section .data
 %define div_4 2
     align 16
     maskF: times 8 DW 0xFFFF ;8 veces 0xFFFF
-    mask4: DW 0, times 6 DW 0xFFFF, DW 0
+    mask4: DW 0x0, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0
 
 section .text
 
