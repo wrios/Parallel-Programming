@@ -5,6 +5,7 @@ section .data
 AZUL : db 0x0, 0xFF, 0xFF, 0xFF,		0x4, 0xFF, 0xFF, 0xFF, 		0x8, 0xFF, 0xFF, 0xFF, 		0xC, 0xFF, 0xFF, 0xFF
 ROJO : db  0xFF, 0xFF, 0x2, 0xFF,		0xFF, 0xFF, 0x6, 0xFF, 		0xFF, 0xFF, 0xA, 0xFF, 		0xFF, 0xFF, 0xE, 0xFF
 VERDE : db 0xFF, 0x1, 0xFF, 0xFF,		0xFF, 0x5, 0xFF, 0xFF, 		0xFF, 0x9, 0xFF, 0xFF, 		0xFF, 0xD, 0xFF, 0xFF
+AAAA : db 0xFF, 0xFF, 0xFF, 0x3,		0xFF, 0xFF, 0xFF, 0x7, 		0xFF, 0xFF, 0xFF, 0xB, 		0xFF, 0xFF, 0xFF, 0xF
 
 
 section .text
@@ -20,10 +21,11 @@ efectoBayer_asm:
 	mov rbp, rsp
 	;sub rsp, 8
 	
-	shr ecx, 2
+	shr ecx, 2; leo de a 4
 	movdqu xmm10, [AZUL]
 	movdqu xmm11, [ROJO]
 	movdqu xmm12, [VERDE]
+	movdqu xmm13, [AAAA]
 
 	;recorro todas las filas
 	mov r10d, 0
@@ -31,9 +33,9 @@ efectoBayer_asm:
 		cmp r10d, edx; r10d = fila actual
 		je termino_ciclo_filas_bayer
 		
-			mov r8, 0
+			mov r8b, 0
 			ciclo_4_veces:
-			cmp r8, 4
+			cmp r8b, 4
 			je termino_ciclo_4_veces
 				;recorro esta fila
 					mov r11d, 0
@@ -42,6 +44,8 @@ efectoBayer_asm:
 					cmp r11d, ecx; r11d = columna actual
 					je termino_ciclo_fila_actual
 					movdqu xmm0, [rdi];
+					movdqu xmm15, xmm0
+					pshufb xmm15, xmm13
 					
 						;elijo mask verde o azul
 						mov r9d, r11d
@@ -56,6 +60,7 @@ efectoBayer_asm:
 						;termino de aplicar mask
 										
 					;se lo cargo a la img out
+					paddw xmm0, xmm15; devuelvo A
 					movdqu [rsi], xmm0;;
 					;sigo iterando
 					add rsi, 16;;
@@ -72,9 +77,9 @@ efectoBayer_asm:
 				jmp ciclo_4_veces
 		termino_ciclo_4_veces:
 		
-		mov r8, 0
+		mov r8b, 0
 		ciclo_4_veces_2:
-		cmp r8, 4
+		cmp r8b, 4
 		je termino_ciclo_4_veces_2
 				;recorro la siguiente fila
 					mov r11d, 0
@@ -83,6 +88,8 @@ efectoBayer_asm:
 					je termino_ciclo_fila_actual_2
 					
 					movdqu xmm0, [rdi];
+					movdqu xmm15, xmm0
+					pshufb xmm15, xmm13
 					
 						;elijo mask rojo o verde
 						mov r9d, r11d
@@ -97,6 +104,7 @@ efectoBayer_asm:
 						;termino de aplicar mask
 						
 					;se lo cargo a la img out
+					paddw xmm0, xmm15; devuelvo el A
 					movdqu [rsi], xmm0;;
 					;si sigo iterando
 					add rsi, 16;;
@@ -121,6 +129,7 @@ efectoBayer_asm:
 		;fin
 		pop rbp
 		ret
+
 
 
 
