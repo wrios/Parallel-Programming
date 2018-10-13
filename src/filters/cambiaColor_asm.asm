@@ -60,13 +60,12 @@ cambiaColor_asm:
 	pslldq xmm11, 8
 	paddw xmm10, xmm11; [0 Cr Cg Cb|0 Cr Cg Cb]
 	
-	;calculo xmm1 = [lim2|lim2]
+	;calculo xmm1 = [0lim|0lim]
 	mov r8d, [rsp+56]
 	movd xmm1, r8d; [00|0lim]
 	pslldq xmm1, 8; [0lim|00]
 	movd xmm11, r8d
 	paddw xmm1, xmm11; [0lim|0lim]
-	pmulld xmm1, xmm1; [0lim2|0lim2]
 
 	;recorro todas las filas
 	mov r10d, 0
@@ -142,10 +141,12 @@ cambiaColor_asm:
 					addps xmm8, xmm9
 					
 					;xmm8 = [0d2|0d2] _float
-					;xmm1 = [lim2|lim2] _int8bytes
+					;xmm1 = [0lim|0lim] _int
+					cvtdq2ps xmm1, xmm1
+					mulps xmm1, xmm1; xmm1=[0lim2|0lim2]
 					movdqu xmm9, xmm1
-					movdqu xmm2, xmm9
-					psllq xmm2, 24
+					movdqu xmm2, xmm1
+					psllq xmm2, 24; 4 bytes
 					addps xmm8, xmm9
 					
 					cvtpd2dq xmm8, xmm8; esta bien ?
@@ -180,3 +181,4 @@ cambiaColor_asm:
 		;fin
 		pop rbp
 ret
+
