@@ -164,7 +164,7 @@ cambiaColor_asm:
 					mulps xmm1, xmm1; xmm1=[0lim2|0lim2]
 					movdqu xmm9, xmm1
 					psllq xmm9, 24; 4 bytes
-					addps xmm9, xmm9; xmm9 = [lim2lim2|lim2lim2]
+					addps xmm9, xmm1; xmm9 = [lim2lim2|lim2lim2]
 					movdqu xmm2, xmm8
 					divps xmm2, xmm9; xmm2 = [0c|0c]
 					
@@ -199,10 +199,10 @@ cambiaColor_asm:
 						;			xmm1 = [0, Nr-r, Ng-g, Nb-b]
 						movdqu xmm0, [rdi]; [argb|argb|argb|argb]
 						pshufb xmm0, xmm11; [rrgb|rrgb]
-						psllq xmm0, 4; [rgb0|rgb0]
-						psrlq xmm0, 4; [0rgb|0rgb]
+						psllq xmm0, 16; [rgb0|rgb0]
+						psrlq xmm0, 16; [0rgb|0rgb]
 						movdqu xmm2, xmm0
-						psrldq xmm2, 24
+						psrldq xmm2, 8
 						pshufb xmm2, xmm15; [0 r g b] 
 						movdqu xmm1, xmm4; [0 Nr Ng Nb|0 Nr Ng Nb]
 						subps xmm1, xmm2; [0, Nr-r, Ng-g, Nb-b] (primeros)
@@ -233,7 +233,6 @@ cambiaColor_asm:
 						pand xmm8, xmm1; [alfa si lim<d, 0 si no]
 						;se lo sumo al [rdi] actual
 						movdqu xmm0, [rdi]; [argb|argb|argb|argb] 
-						pslld xmm0, 8
 						psrldq xmm0, 8; [0000|0000|0rgb|0rgb]
 						pslldq xmm0, 8; [0rgb|0rgb|0000|0000]	
 						paddb xmm0, xmm8			
@@ -313,7 +312,7 @@ cambiaColor_asm:
 							mulps xmm1, xmm1; xmm1=[0lim2|0lim2]
 							movdqu xmm9, xmm1
 							psllq xmm9, 24; 4 bytes
-							addps xmm9, xmm9; xmm9 = [lim2lim2|lim2lim2]
+							addps xmm9, xmm1; xmm9 = [lim2lim2|lim2lim2]
 							movdqu xmm2, xmm8
 							divps xmm2, xmm9; xmm2 = [0c|0c]
 							
@@ -349,10 +348,10 @@ cambiaColor_asm:
 								movdqu xmm0, [rdi]; [argb|argb|argb|argb]
 								pslldq xmm0, 8
 								pshufb xmm0, xmm11; [rrgb|rrgb] (segundos)
-								psllq xmm0, 4; [rgb0|rgb0]
-								psrlq xmm0, 4; [0rgb|0rgb]
+								psllq xmm0, 16; [rgb0|rgb0] 2bytes
+								psrlq xmm0, 16; [0rgb|0rgb] 2bytes
 								movdqu xmm2, xmm0
-								psrldq xmm2, 24
+								psrldq xmm2, 8
 								pshufb xmm2, xmm15; [0 r g b] 
 								movdqu xmm1, xmm4; [0 Nr Ng Nb|0 Nr Ng Nb]
 								subps xmm1, xmm2; [0, Nr-r, Ng-g, Nb-b] (primeros)
@@ -383,13 +382,11 @@ cambiaColor_asm:
 								pand xmm8, xmm1; [alfa si lim<d, 0 si no]
 								;se lo sumo al [rdi] actual
 								movdqu xmm0, [rdi]; [argb|argb|argb|argb] 
-								pslld xmm0, 8
-								psrldq xmm0, 8; [0000|0000|0rgb|0rgb]
-								psrldq xmm8, 8
+								psrldq xmm8, 8; [0000|0000|0rgb|0rgb]
 								paddb xmm0, xmm8
 								movdqu xmm1, [rsi]
 								paddb xmm1, xmm0
-								movdqu [rsi], xmm1			
+								movdqu [rsi], xmm1		
 											
 							;se lo cargo a la img out
 								;paddb xmm0, xmm15; devuelvo A
@@ -414,4 +411,3 @@ cambiaColor_asm:
 		;fin
 		pop rbp
 ret
-
