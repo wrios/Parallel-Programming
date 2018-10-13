@@ -11,6 +11,7 @@ rojo_adelante : db 0xFF, 0xFF, 0xFF, 0xFF,    0xFF, 0xFF, 0x4, 0x5,    0xFF, 0xF
 constantes : dw 3.0, 4.0, 2.0, 0.001953125
 segundos_params : dw 0x0, 0xFF,  0x1, 0xFF,  0x2, 0xFF,  0x3, 0xFF
 _1000_1000 : dw 0xFF, 0xFF, 0xFF, 0x1,    0xFF, 0xFF, 0xFF, 0x1
+to_pixel : db 0x0, 0x4, 0x8, 0xC,    0xFF, 0xFF, 0xFF, 0xFF,    0xFF, 0xFF, 0xFF, 0xFF,    0xFF, 0xFF, 0xFF, 0xFF
 
 section .text
 global cambiaColor_asm
@@ -171,15 +172,72 @@ cambiaColor_asm:
 					cvttps2dq xmm8, xmm8; to_int [0d2|0d2]
 					cvttps2dq xmm1, xmm1; to_int [0lim2|0lim2]
 					pcmpgtd xmm1, xmm8; xmm1 = [0 lim>d | 0 lim>d]
-					movdqu xmm8, xmm1
-					psllq xmm8, 24; 4bytes
-					por xmm1, xmm8; xmm1 = [lim>d | lim>d]
 			
-					;calculo [0, Nr-r, Ng-g, Nb-b]
-						;...
-						;...
-								
-										
+					;calculo xmm8 = [0, Nr-r, Ng-g, Nb-b]*(1-c)
+						;precalculo xmm8 = [0(1-c)|(1-c)(1-c)] primeros
+						;			xmm9 = [0(1-c)|(1-c)(1-c)] segundos
+						por xmm8, xmm8
+						divps xmm8, xmm8; xmm8 = [11|11]
+						subps xmm8, xmm2; xmm8 = [1(1-c)|1(1-c)]
+						psllq xmm8, 24; 4bytes
+						psrlq xmm8, 24; xmm8 = [0(1-c)|0(1-c)]
+						movdqu xmm9, xmm8
+						pslldq xmm9, 8; [0(1-c)00]
+						movdqu xmm3, xmm9
+						psrldq xmm3, 4
+						addps xmm9, xmm3; [0(1-c)|(1-c)0]
+						psrldq xmm3, 4
+						addps xmm9, xmm3; [0(1-c)|(1-c)(1-c)] (segundos)
+						psrldq xmm8, 8; [00|0(1-c)]
+						movdqu xmm3, xmm8
+						pslldq xmm3, 4
+						addps xmm8, xmm3; [00|(1-c)(1-c)]
+						pslldq xmm3, 4
+						addps xmm8, xmm3; [0(1-c)|(1-c)(1-c)] (primeros)
+						;tenemos xmm4 = [0 Nr Ng Nb|0 Nr Ng Nb]
+						;precalculo xmm0 = [0rgb|0rgb]
+						;			xmm1 = [0, Nr-r, Ng-g, Nb-b]
+						movdqu xmm0, [rdi]; [argb|argb|argb|argb]
+						pshufb xmm0, xmm11; [rrgb|rrgb]
+						psllq xmm0, 4; [rgb0|rgb0]
+						psrlq xmm0, 4; [0rgb|0rgb]
+						movdqu xmm2, xmm0
+						psrldq xmm2, 24
+						pshufb xmm2, xmm15; [0 r g b] 
+						movdqu xmm1, xmm4; [0 Nr Ng Nb|0 Nr Ng Nb]
+						subps xmm1, xmm2; [0, Nr-r, Ng-g, Nb-b] (primeros)
+						;multiplico
+						mulps xmm8, xmm1; [0, Nr-r, Ng-g, Nb-b]*(1-c)
+						movdqu xmm2, xmm0
+						pshufb xmm2, xmm15; [0 r g b]
+						movdqu xmm1, xmm4
+						subps xmm1, xmm2; [0, Nr-r, Ng-g, Nb-b] (segundos)
+						;multiplico
+						mulps xmm9, xmm1; [0, Nr-r, Ng-g, Nb-b]*(1-c)	
+						cvttps2dq xmm8, xmm8
+						cvttps2dq xmm9, xmm9; to_int
+						movdqu xmm3, [to_pixel]
+						pshufb xmm8, xmm3; [0000|0000|0000|0rgb]
+						pslldq xmm8, 12; [0rgb|0000|0000|0000]
+						pshufb xmm9, xmm3
+						pslldq xmm9, 8; [0000|0rgb|0000|0000]
+						paddb xmm8, xmm9; [0rgb|0rgb|0000|0000]
+						;quiero ver si hace falta sumarle xmm8 a xmm0
+						;xmm1 = [0 lim>d | 0 lim>d] 
+						movdqu xmm2, xmm1
+						pslldq xmm2, 8; [0 lim>d| 0 0] snd
+						psrldq xmm1, 4
+						pslldq xmm1, 8; [lim>d 0| 0 0] fst
+						paddw xmm1, xmm2; [lim>d, lim>d, 0, 0]
+						;paso clave
+						pand xmm8, xmm1; [alfa si lim<d, 0 si no]
+						;se lo sumo al [rdi] actual
+						movdqu xmm0, [rdi]; [argb|argb|argb|argb] 
+						pslld xmm0, 8
+						psrldq xmm0, 8; [0000|0000|0rgb|0rgb]
+						pslldq xmm0, 8; [0rgb|0rgb|0000|0000]	
+						paddb xmm0, xmm8			
+									
 					;se lo cargo a la img out
 						;paddb xmm0, xmm15; devuelvo A
 					movdqu [rsi], xmm0;;
@@ -202,4 +260,3 @@ cambiaColor_asm:
 		;fin
 		pop rbp
 ret
-
