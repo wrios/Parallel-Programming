@@ -38,7 +38,8 @@ cambiaColor_asm:
 	mov rbp, rsp
 	;sub rsp, 8
 	
-	;calculo xmm10 = [0 Cr Cg Cb|0 Cr Cg Cb]
+	;calculo xmm10 = [Cr Cr Cg Cb|Cr Cr Cg Cb]
+	;ESTO ANDA OK
 	xor r8, r8
 	mov r8b, [rsp+cr]; Cr
 	movd xmm10, r8d; [0000|000r]
@@ -50,6 +51,7 @@ cambiaColor_asm:
 	mov r8b, [rsp+cg]; Cg
 	movd xmm11, r8d
 	paddw xmm10, xmm11; [0000|0rrg]
+	pslldq xmm10, 2; [0000|rrg0]
 	xor r8, r8
 	mov r8b, [rsp+cb]; Cb
 	movd xmm11, r8d
@@ -58,8 +60,8 @@ cambiaColor_asm:
 	pslldq xmm11, 8
 	paddw xmm10, xmm11; [0 Cr Cg Cb|0 Cr Cg Cb]
 	
-	;calculo xmm4 = [0 Nr Ng Nb|0 Nr Ng Nb]
-	xor r8, r8
+	;calculo xmm4 = [Nr Nr Ng Nb|Nr Nr Ng Nb]
+	;ESTO ANDA OK
 	xor r8, r8
 	mov r8b, [rsp+nr]; Nr
 	movd xmm4, r8d; [0000|000r]
@@ -71,18 +73,19 @@ cambiaColor_asm:
 	mov r8b, [rsp+ng]; Ng
 	movd xmm11, r8d
 	paddw xmm4, xmm11; [0000|0rrg]
+	pslldq xmm4, 2; [0000|rrg0]
 	xor r8, r8
 	mov r8b, [rsp+nb]; Nb
 	movd xmm11, r8d
 	paddw xmm4, xmm11; [0000|rrgb]
-	movdqu xmm11, xmm10
+	movdqu xmm11, xmm4
 	pslldq xmm11, 8
 	paddw xmm4, xmm11; [0 Nr Ng Nb|0 Nr Ng Nb]
 	
 	;calculo xmm1 = [0lim2|0lim2]
+	;ESTO ANDA OK
 	xor r8, r8
-	xor r8, r8
-	mov r8d, [rsp+lim]
+	mov r8b, [rsp+lim]
 	movd xmm1, r8d; [00|0lim]
 	pslldq xmm1, 8; [0lim|00]
 	movd xmm11, r8d
