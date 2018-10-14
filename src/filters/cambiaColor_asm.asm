@@ -46,20 +46,20 @@ cambiaColor_asm:
 	movd xmm10, r8d; [0000|000r]
 	pslldq xmm10, 2; [0000|00r0]
 	movd xmm11, r8d
-	paddw xmm10, xmm11
+	paddusw xmm10, xmm11
 	pslldq xmm10, 2; [0000|0rr0]
 	xor r8, r8
 	mov r8b, [rsp+cg]; Cg
 	movd xmm11, r8d
-	paddw xmm10, xmm11; [0000|0rrg]
+	paddusw xmm10, xmm11; [0000|0rrg]
 	pslldq xmm10, 2; [0000|rrg0]
 	xor r8, r8
 	mov r8b, [rsp+cb]; Cb
 	movd xmm11, r8d
-	paddw xmm10, xmm11; [0000|rrgb]
+	paddusw xmm10, xmm11; [0000|rrgb]
 	movdqu xmm11, xmm10
 	pslldq xmm11, 8
-	paddw xmm10, xmm11; [0 Cr Cg Cb|0 Cr Cg Cb]
+	paddusw xmm10, xmm11; [0 Cr Cg Cb|0 Cr Cg Cb]
 	
 	;calculo xmm4 = [Nr Nr Ng Nb|Nr Nr Ng Nb]
 	xor r8, r8
@@ -67,20 +67,20 @@ cambiaColor_asm:
 	movd xmm4, r8d; [0000|000r]
 	pslldq xmm4, 2; [0000|00r0]
 	movd xmm11, r8d
-	paddw xmm4, xmm11
+	paddusw xmm4, xmm11
 	pslldq xmm4, 2; [0000|0rr0]
 	xor r8, r8
 	mov r8b, [rsp+ng]; Ng
 	movd xmm11, r8d
-	paddw xmm4, xmm11; [0000|0rrg]
+	paddusw xmm4, xmm11; [0000|0rrg]
 	pslldq xmm4, 2; [0000|rrg0]
 	xor r8, r8
 	mov r8b, [rsp+nb]; Nb
 	movd xmm11, r8d
-	paddw xmm4, xmm11; [0000|rrgb]
+	paddusw xmm4, xmm11; [0000|rrgb]
 	movdqu xmm11, xmm4
 	pslldq xmm11, 8
-	paddw xmm4, xmm11; [0 Nr Ng Nb|0 Nr Ng Nb]
+	paddusw xmm4, xmm11; [0 Nr Ng Nb|0 Nr Ng Nb]
 	
 	;calculo xmm1 = [0lim2|0lim2]
 	xor r8, r8
@@ -88,7 +88,7 @@ cambiaColor_asm:
 	movd xmm1, r8d; [00|0lim]
 	pslldq xmm1, 8; [0lim|00]
 	movd xmm11, r8d
-	paddw xmm1, xmm11; [0lim|0lim]
+	paddusw xmm1, xmm11; [0lim|0lim]
 	cvtdq2ps xmm1, xmm1; to_float
 	mulps xmm1, xmm1; xmm1=[0lim2|0lim2]
 	cvttps2dq xmm1, xmm1; to_int [0lim2|0lim2]
@@ -113,6 +113,8 @@ cambiaColor_asm:
 					je termino_ciclo_fila_actual
 					
 					movdqu xmm0, [rdi]; [argb|argb|argb|argb]
+					pslld xmm0, 8
+					psrld xmm0, 8; saco a
 					pshufb xmm0, xmm11; [rrgb|rrgb] (primeros)
 					
 					;calculo xmm7 = [r'111|r'111]
@@ -120,13 +122,13 @@ cambiaColor_asm:
 					pshufb xmm6, xmm13; [r000|r000]
 					movdqu xmm7, xmm10; [CrCrCgCb|CrCrCgCb]
 					pshufb xmm7, xmm13; [r000|r000]
-					paddw xmm7, xmm6; [r'000|r'000]
+					paddusw xmm7, xmm6; [r'000|r'000];paddw xmm7, xmm6; [r'000|r'000]
 					movdqu xmm2, [_0111_0111]
-					paddw xmm7, xmm2; [r'111|r'111]
+					paddusw xmm7, xmm2; [r'111|r'111];paddw xmm7, xmm2; [r'111|r'111]
 					
 				;calculo xmmo = [d2|d2]
 					;precalculo xmm0 = [Δr2-b2,Δr2,Δg2,Δb2|Δr2-b2,Δr2,Δg2,Δb2]
-					psubw xmm0, xmm10; [ΔrΔrΔgΔb|ΔrΔrΔgΔb]
+					psubb xmm0, xmm10; [ΔrΔrΔgΔb|ΔrΔrΔgΔb]; PSUBW
 					pmullw xmm0, xmm0; [Δr2Δr2Δg2Δb2|Δr2Δr2Δg2Δb2]
 						;calculo xmm2 = [Δb2000|Δb2000]
 						movdqu xmm2, xmm0
@@ -222,6 +224,8 @@ cambiaColor_asm:
 						;tenemos xmm4 = [0 Nr Ng Nb|0 Nr Ng Nb]
 						;precalculo xmm0 = [0rgb|0rgb]
 						movdqu xmm0, [rdi]; [argb|argb|argb|argb]
+						pslld xmm0, 8
+						psrld xmm0, 8; saco a
 						pshufb xmm0, xmm11; [rrgb|rrgb]
 						psllq xmm0, 2*8; [rgb0|rgb0]
 						psrlq xmm0, 2*8; [0rgb|0rgb]
@@ -262,7 +266,7 @@ cambiaColor_asm:
 						pslldq xmm8, 12; [0rgb|0000|0000|0000]
 						pshufb xmm9, xmm3
 						pslldq xmm9, 8; [0000|0rgb|0000|0000]
-						paddb xmm8, xmm9; [0rgb|0rgb|0000|0000] = "res parcial"
+						paddb xmm8, xmm9; [0rgb|0rgb|0000|0000] = "res parcial"; sumas disjuntas
 						
 						;quiero ver si el resultado esta en xmm8 o xmm0
 						;xmm5 = [0 lim>d | 0 lim>d] 
@@ -270,17 +274,19 @@ cambiaColor_asm:
 						pslldq xmm2, 8; [0 lim>d| 0 0] snd
 						psrldq xmm5, 4; [0 0 lim>d 0] fst
 						pslldq xmm5, 8; [lim>d 0| 0 0] fst
-						paddw xmm5, xmm2; [lim>d, lim>d, 0, 0];
+						paddw xmm5, xmm2; [lim>d, lim>d, 0, 0]; sumas disjuntas
 						;paso clave
 						pand xmm8, xmm5; ["res" si lim<d, 0 si no]
 						;se lo sumo al [rdi] actual
 						movdqu xmm0, [rdi]; [argb|argb|argb|argb]
+						pslld xmm0, 8
+						psrld xmm0, 8; saco a
 						;;pnot xmm5, xmm5
 							movdqu xmm2, [unos_enteros]
 							pcmpeqw xmm2, xmm2
 							pxor xmm5, xmm2
 						pand xmm0, xmm5; [src si d>=lim, 0 si no]
-						paddb xmm0, xmm8
+						paddusb xmm0, xmm8
 						
 						psrldq xmm0, 8
 						pslldq xmm0, 8			
@@ -290,6 +296,8 @@ cambiaColor_asm:
 					
 									;;hago exactamente lo mismo para el otro par de pixeles
 											movdqu xmm0, [rdi]; [argb|argb|argb|argb]
+											pslld xmm0, 8
+											psrld xmm0, 8; saco a
 											pslldq xmm0, 8
 											pshufb xmm0, xmm11; [rrgb|rrgb] (primeros)
 											
@@ -298,9 +306,9 @@ cambiaColor_asm:
 											pshufb xmm6, xmm13; [r000|r000]
 											movdqu xmm7, xmm10; [CrCrCgCb|CrCrCgCb]
 											pshufb xmm7, xmm13; [r000|r000]
-											paddw xmm7, xmm6; [r'000|r'000]
+											paddusw xmm7, xmm6; [r'000|r'000];paddw xmm7, xmm6; [r'000|r'000]
 											movdqu xmm2, [_0111_0111]
-											paddw xmm7, xmm2; [r'111|r'111]
+											paddusw xmm7, xmm2; [r'111|r'111];paddw xmm7, xmm2; [r'111|r'111]
 											
 										;calculo xmmo = [d2|d2]
 											;precalculo xmm0 = [Δr2-b2,Δr2,Δg2,Δb2|Δr2-b2,Δr2,Δg2,Δb2]
@@ -400,6 +408,8 @@ cambiaColor_asm:
 												;tenemos xmm4 = [0 Nr Ng Nb|0 Nr Ng Nb]
 												;precalculo xmm0 = [0rgb|0rgb]
 												movdqu xmm0, [rdi]; [argb|argb|argb|argb]
+												pslld xmm0, 8
+												psrld xmm0, 8; saco a
 												pslldq xmm0, 8
 												pshufb xmm0, xmm11; [rrgb|rrgb]
 												psllq xmm0, 2*8; [rgb0|rgb0]
@@ -441,7 +451,7 @@ cambiaColor_asm:
 												pslldq xmm8, 12; [0rgb|0000|0000|0000]
 												pshufb xmm9, xmm3
 												pslldq xmm9, 8; [0000|0rgb|0000|0000]
-												paddb xmm8, xmm9; [0rgb|0rgb|0000|0000] = "res parcial"
+												paddb xmm8, xmm9; [0rgb|0rgb|0000|0000] = "res parcial" sumas disj
 												
 												;quiero ver si el resultado esta en xmm8 o xmm0
 												;xmm5 = [0 lim>d | 0 lim>d] 
@@ -449,24 +459,26 @@ cambiaColor_asm:
 												pslldq xmm2, 8; [0 lim>d| 0 0] snd
 												psrldq xmm5, 4; [0 0 lim>d 0] fst
 												pslldq xmm5, 8; [lim>d 0| 0 0] fst
-												paddw xmm5, xmm2; [lim>d, lim>d, 0, 0];
+												paddw xmm5, xmm2; [lim>d, lim>d, 0, 0]; sumas disj
 												;paso clave
 												pand xmm8, xmm5; ["res" si lim<d, 0 si no]
 												;se lo sumo al [rdi] actual
 												movdqu xmm0, [rdi]; [argb|argb|argb|argb]
+												pslld xmm0, 8
+												psrld xmm0, 8; saco a
 												pslldq xmm0, 8
 												;;pnot xmm5, xmm5
 													movdqu xmm2, [unos_enteros]
 													pcmpeqw xmm2, xmm2
 													pxor xmm5, xmm2
 												pand xmm0, xmm5; [src si d>=lim, 0 si no]
-												paddb xmm0, xmm8
+												paddusb xmm0, xmm8
 												;son los segundos dos pixeles
 												psrldq xmm0, 8	
 												
 												;recupero los que ya calcule
 												movdqu xmm8, [rsi]
-												paddb xmm0, xmm8		
+												paddusb xmm0, xmm8		
 															
 											;se lo cargo a la img out
 											movdqu [rsi], xmm0
