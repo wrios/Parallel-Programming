@@ -128,7 +128,7 @@ cambiaColor_asm:
 					
 				;calculo xmmo = [d2|d2]
 					;precalculo xmm0 = [Δr2-b2,Δr2,Δg2,Δb2|Δr2-b2,Δr2,Δg2,Δb2]
-					psubb xmm0, xmm10; [ΔrΔrΔgΔb|ΔrΔrΔgΔb]; PSUBW
+					psubw xmm0, xmm10; [ΔrΔrΔgΔb|ΔrΔrΔgΔb]; PSUBB ROMPE TODO
 					pmullw xmm0, xmm0; [Δr2Δr2Δg2Δb2|Δr2Δr2Δg2Δb2]
 						;calculo xmm2 = [Δb2000|Δb2000]
 						movdqu xmm2, xmm0
