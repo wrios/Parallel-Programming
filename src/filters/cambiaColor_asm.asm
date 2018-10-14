@@ -46,20 +46,20 @@ cambiaColor_asm:
 	movd xmm10, r8d; [0000|000r]
 	pslldq xmm10, 2; [0000|00r0]
 	movd xmm11, r8d
-	paddusw xmm10, xmm11
+	paddw xmm10, xmm11
 	pslldq xmm10, 2; [0000|0rr0]
 	xor r8, r8
 	mov r8b, [rsp+cg]; Cg
 	movd xmm11, r8d
-	paddusw xmm10, xmm11; [0000|0rrg]
+	paddw xmm10, xmm11; [0000|0rrg]
 	pslldq xmm10, 2; [0000|rrg0]
 	xor r8, r8
 	mov r8b, [rsp+cb]; Cb
 	movd xmm11, r8d
-	paddusw xmm10, xmm11; [0000|rrgb]
+	paddw xmm10, xmm11; [0000|rrgb]
 	movdqu xmm11, xmm10
 	pslldq xmm11, 8
-	paddusw xmm10, xmm11; [0 Cr Cg Cb|0 Cr Cg Cb]
+	paddw xmm10, xmm11; [0 Cr Cg Cb|0 Cr Cg Cb]
 	
 	;calculo xmm4 = [Nr Nr Ng Nb|Nr Nr Ng Nb]
 	xor r8, r8
@@ -67,31 +67,31 @@ cambiaColor_asm:
 	movd xmm4, r8d; [0000|000r]
 	pslldq xmm4, 2; [0000|00r0]
 	movd xmm11, r8d
-	paddusw xmm4, xmm11
+	paddw xmm4, xmm11
 	pslldq xmm4, 2; [0000|0rr0]
 	xor r8, r8
 	mov r8b, [rsp+ng]; Ng
 	movd xmm11, r8d
-	paddusw xmm4, xmm11; [0000|0rrg]
+	paddw xmm4, xmm11; [0000|0rrg]
 	pslldq xmm4, 2; [0000|rrg0]
 	xor r8, r8
 	mov r8b, [rsp+nb]; Nb
 	movd xmm11, r8d
-	paddusw xmm4, xmm11; [0000|rrgb]
+	paddw xmm4, xmm11; [0000|rrgb]
 	movdqu xmm11, xmm4
 	pslldq xmm11, 8
-	paddusw xmm4, xmm11; [0 Nr Ng Nb|0 Nr Ng Nb]
+	paddw xmm4, xmm11; [0 Nr Ng Nb|0 Nr Ng Nb]
 	
-	;calculo xmm1 = [0lim2|0lim2]
+	;calculo xmm1 = [0lim|0lim] int
 	xor r8, r8
 	mov r8b, [rsp+lim]
 	movd xmm1, r8d; [00|0lim]
 	pslldq xmm1, 8; [0lim|00]
 	movd xmm11, r8d
-	paddusw xmm1, xmm11; [0lim|0lim]
-	cvtdq2ps xmm1, xmm1; to_float
-	mulps xmm1, xmm1; xmm1=[0lim2|0lim2]
-	cvttps2dq xmm1, xmm1; to_int [0lim2|0lim2]
+	paddw xmm1, xmm11; [0lim|0lim]
+	;cvtdq2ps xmm1, xmm1; to_float
+	;mulps xmm1, xmm1; xmm1=[0lim2|0lim2]
+	;cvttps2dq xmm1, xmm1; to_int [0lim2|0lim2]
 	
 	shr ecx, 2; leo de a 4
 	movdqu xmm11, [pixel_1_2]
@@ -122,13 +122,13 @@ cambiaColor_asm:
 					pshufb xmm6, xmm13; [r000|r000]
 					movdqu xmm7, xmm10; [CrCrCgCb|CrCrCgCb]
 					pshufb xmm7, xmm13; [r000|r000]
-					paddusw xmm7, xmm6; [r'000|r'000];paddw xmm7, xmm6; [r'000|r'000]
+					paddw xmm7, xmm6; [r'000|r'000];paddw xmm7, xmm6; [r'000|r'000]
 					movdqu xmm2, [_0111_0111]
-					paddusw xmm7, xmm2; [r'111|r'111];paddw xmm7, xmm2; [r'111|r'111]
+					paddw xmm7, xmm2; [r'111|r'111];paddw xmm7, xmm2; [r'111|r'111]
 					
-				;calculo xmmo = [d2|d2]
+				;calculo xmm? = [d|d];
 					;precalculo xmm0 = [Δr2-b2,Δr2,Δg2,Δb2|Δr2-b2,Δr2,Δg2,Δb2]
-					psubw xmm0, xmm10; [ΔrΔrΔgΔb|ΔrΔrΔgΔb]; PSUBB ROMPE TODO
+					psubw xmm0, xmm10; [ΔrΔrΔgΔb|ΔrΔrΔgΔb]; PSUBB rompe todo
 					pmullw xmm0, xmm0; [Δr2Δr2Δg2Δb2|Δr2Δr2Δg2Δb2]
 						;calculo xmm2 = [Δb2000|Δb2000]
 						movdqu xmm2, xmm0
@@ -137,7 +137,7 @@ cambiaColor_asm:
 						pshufb xmm2, xmm12; [Δb2000|Δb2000]
 					psubw xmm0, xmm2; xmm0=[Δr2-b2,Δr2,Δg2,Δb2|Δr2-b2,Δr2,Δg2,Δb2]
 					
-					;calculo xmm8 = [0d2|0d2]
+					;calculo xmm8 = [0d|0d];
 					movdqu xmm2, xmm7
 					psrldq xmm2, 8
 					pshufb xmm2, xmm15; [r'111] primeros
@@ -154,7 +154,6 @@ cambiaColor_asm:
 					pshufb xmm8, xmm15; [Δr2-b2,Δr2,Δg2,Δb2] primeros
 					pslld xmm8, 2*8
 					psrad xmm8, 2*8
-
 					;to_float
 					;mutiplico por las constantes
 					cvtdq2ps xmm8, xmm8
@@ -181,19 +180,22 @@ cambiaColor_asm:
 					addps xmm9, xmm3; [***d2]
 					pslldq xmm9, 12
 					psrldq xmm9, 12; [000d']
-					addps xmm8, xmm9
+					addps xmm8, xmm9; [0d2|0d2]
+					sqrtps xmm8, xmm8; [0d|0d]
 					
-					;xmm8 = [0d2|0d2] _float
-					;xmm1 = [0lim2|0lim2] _int
+					;xmm8 = [0d|0d] _float
+					;xmm1 = [0lim|0lim] _int
 					movdqu xmm9, xmm1
 					psllq xmm9, 8*4; 4 bytes
-					paddw xmm9, xmm1; xmm9 = [lim2lim2|lim2lim2]
+					paddd xmm9, xmm1; xmm9 = [limlim|limlim]; paddw ??
 					cvtdq2ps xmm9, xmm9
 					movdqu xmm2, xmm8
-					divps xmm2, xmm9; xmm2 = [0c|0c]
+					divps xmm2, xmm9; xmm2 = [0c|0c] casi
+					mulps xmm2, xmm2; xmm2 = [0c|0c]
 					
+					;XMM1 = [0LIM|0LIM] _INT
 					;calculo xmm5 = [lim>d|lim>d] _int
-					cvttps2dq xmm8, xmm8; to_int [0d2|0d2]
+					cvttps2dq xmm8, xmm8; to_int [0d|0d]
 					movdqu xmm5, xmm1
 					pcmpgtd xmm5, xmm8; xmm5 = [0 lim>d | 0 lim>d]
 			
@@ -286,7 +288,7 @@ cambiaColor_asm:
 							pcmpeqw xmm2, xmm2
 							pxor xmm5, xmm2
 						pand xmm0, xmm5; [src si d>=lim, 0 si no]
-						paddusb xmm0, xmm8
+						paddb xmm0, xmm8
 						
 						psrldq xmm0, 8
 						pslldq xmm0, 8			
@@ -306,11 +308,11 @@ cambiaColor_asm:
 											pshufb xmm6, xmm13; [r000|r000]
 											movdqu xmm7, xmm10; [CrCrCgCb|CrCrCgCb]
 											pshufb xmm7, xmm13; [r000|r000]
-											paddusw xmm7, xmm6; [r'000|r'000];paddw xmm7, xmm6; [r'000|r'000]
+											paddw xmm7, xmm6; [r'000|r'000];paddw xmm7, xmm6; [r'000|r'000]
 											movdqu xmm2, [_0111_0111]
-											paddusw xmm7, xmm2; [r'111|r'111];paddw xmm7, xmm2; [r'111|r'111]
+											paddw xmm7, xmm2; [r'111|r'111];paddw xmm7, xmm2; [r'111|r'111]
 											
-										;calculo xmmo = [d2|d2]
+										;calculo xmm? = [d|d]
 											;precalculo xmm0 = [Δr2-b2,Δr2,Δg2,Δb2|Δr2-b2,Δr2,Δg2,Δb2]
 											psubw xmm0, xmm10; [ΔrΔrΔgΔb|ΔrΔrΔgΔb]
 											pmullw xmm0, xmm0; [Δr2Δr2Δg2Δb2|Δr2Δr2Δg2Δb2]
@@ -321,7 +323,7 @@ cambiaColor_asm:
 												pshufb xmm2, xmm12; [Δb2000|Δb2000]
 											psubw xmm0, xmm2; xmm0=[Δr2-b2,Δr2,Δg2,Δb2|Δr2-b2,Δr2,Δg2,Δb2]
 											
-											;calculo xmm8 = [0d2|0d2]
+											;calculo xmm8 = [0d|0d]
 											movdqu xmm2, xmm7
 											psrldq xmm2, 8
 											pshufb xmm2, xmm15; [r'111] primeros
@@ -338,7 +340,6 @@ cambiaColor_asm:
 											pshufb xmm8, xmm15; [Δr2-b2,Δr2,Δg2,Δb2] primeros
 											pslld xmm8, 2*8
 											psrad xmm8, 2*8
-
 											;to_float
 											;mutiplico por las constantes
 											cvtdq2ps xmm8, xmm8
@@ -365,19 +366,21 @@ cambiaColor_asm:
 											addps xmm9, xmm3; [***d2]
 											pslldq xmm9, 12
 											psrldq xmm9, 12; [000d']
-											addps xmm8, xmm9
+											addps xmm8, xmm9; [0d2|0d2]
+											sqrtps xmm8, xmm8; [0d|0d]
 											
-											;xmm8 = [0d2|0d2] _float
-											;xmm1 = [0lim2|0lim2] _int
+											;xmm8 = [0d|0d] _float
+											;xmm1 = [0lim|0lim] _int
 											movdqu xmm9, xmm1
 											psllq xmm9, 8*4; 4 bytes
-											paddw xmm9, xmm1; xmm9 = [lim2lim2|lim2lim2]
+											paddw xmm9, xmm1; xmm9 = [limlim|limlim]
 											cvtdq2ps xmm9, xmm9
 											movdqu xmm2, xmm8
-											divps xmm2, xmm9; xmm2 = [0c|0c]
+											divps xmm2, xmm9; xmm2 = [0c|0c] casi
+											mulps xmm2, xmm2; [0c|0c]
 											
 											;calculo xmm5 = [lim>d|lim>d] _int
-											cvttps2dq xmm8, xmm8; to_int [0d2|0d2]
+											cvttps2dq xmm8, xmm8; to_int [0d|0d]
 											movdqu xmm5, xmm1
 											pcmpgtd xmm5, xmm8; xmm5 = [0 lim>d | 0 lim>d]
 									
@@ -472,13 +475,13 @@ cambiaColor_asm:
 													pcmpeqw xmm2, xmm2
 													pxor xmm5, xmm2
 												pand xmm0, xmm5; [src si d>=lim, 0 si no]
-												paddusb xmm0, xmm8
+												paddb xmm0, xmm8
 												;son los segundos dos pixeles
 												psrldq xmm0, 8	
 												
 												;recupero los que ya calcule
 												movdqu xmm8, [rsi]
-												paddusb xmm0, xmm8		
+												paddb xmm0, xmm8		
 															
 											;se lo cargo a la img out
 											movdqu [rsi], xmm0
