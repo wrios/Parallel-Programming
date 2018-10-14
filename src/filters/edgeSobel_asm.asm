@@ -35,15 +35,13 @@ edgeSobel_asm:
 	push rcx
 	sub rsp, 8
 
-	movdqu xmm13, [mask_255]
-    movdqu xmm12, [mask_negar]
 	mov r15, rdi; r15 img in
 	mov rbx, rsi; rbx img out
 	mov r14d, ecx; r14 cantidad de columnas
 	;cantidad de iteraciones sin contar la ultima fila
 	;la ultima fila tiene el proceso un poco diferente por lectura invalida
 	mov r13d, edx; r13 cantidad de filas
-	sub edx, 3
+	sub edx, 2
 	;se recorre n-3 filas con el loop
 	cicloFilasEdge:
 		mov r12d, ecx; r12 cantidad de columnas
@@ -132,108 +130,6 @@ edgeSobel_asm:
 	jne cicloFilasEdge
 
 
-
-;procesando ultima fila
-;rdi quedo en el inicio de la fila n-3 y voy a procesar el ultimo
-;rsi "analogo"
-	mov edx, r14d;columnas
-	shr edx, 2;columnas/4
-	;se procesa los ultimos bytes, entonces retroceso 12
-	;para que los 4 que proceso sean los 4 primeros de la ultima fila
-	;se agregan 
-	;add edx, 3
-	cicloEdgeUltimaFila:
-	
-		;cargando primer bloque de pixeles
-			movdqu xmm1,[rdi+r14*0]
-			movdqu xmm2,[rdi+r14*1]
-			movdqu xmm3,[rdi+r14*2]
-			;guardando(para empaquetar) parte baja del bloque a modificar
-			pxor xmm15, xmm15
-			;extension de los bytes a trabajar
-			movdqu xmm4, xmm1
-			movdqu xmm5, xmm2
-			movdqu xmm6, xmm3
-			punpckhbw xmm4, xmm15
-;xmm4 = 0 p15|...|0 p8(word)(fila inferior)
-			punpckhbw xmm5, xmm15
-;xmm5 = 0 p15|...|0 p8(word)(fila inferior)			
-			punpckhbw xmm6, xmm15
-;xmm6 = 0 p15|...|0 p8(word)(fila inferior)			
-			;Calculando Operador X
-			;sumatoria en xmm4
-			paddsw xmm4, xmm5
-			paddsw xmm4, xmm5
-			paddsw xmm4, xmm6
-			;sumatoria desde suma p15|...|suma p8(word)
-			movdqu xmm5, xmm4
-;xmm5 = suma p15|...|suma p8(word)
-			pslldq xmm4, 4
-;xmm4 = suma p13|...|suma p8|0|0(word)
-			psubsw xmm4, xmm5
-;xmm4 = sum13 - suma15|...|suma p8- suma p10(word)
-			; caculore realizado para el pixel 1 al pixel 6
-			;Operador X en xmm4
-
-			;extension de los bytes a trabajar
-			punpckhbw xmm4, xmm15
-;xmm4 = 0 p7|...|0 p0(word)(fila inferior)			
-			punpckhbw xmm5, xmm15
-;xmm5 = 0 p7|...|0 p0(word)(fila medio)			
-			punpckhbw xmm6, xmm15
-;xmm6 = 0 p7|...|0 p0(word)(fila superior)			
-			;Calculando Operador X	
-
-;xmm4 = modulo del Operador X(p1 a p6)(en word)
-
-			;Calculando Operador Y
-			pxor xmm15, xmm15
-			;extension de los bytes a trabajar
-			movdqu xmm7, xmm1
-			movdqu xmm8, xmm3
-			;Solo usa la fila superior y la fila inferior
-			;fila superior - fila inferior
-			punpcklbw xmm7, xmm15
-;xmm7 = p7|...| p0(word)(fila inferior)
-			punpcklbw xmm8, xmm15
-;xmm7 = p7|...| p0(word)(fila superior)
-			psubsw xmm7, xmm8
-;xmm7 = p7-p7|...|p0-p0(word)(fila inferior- fila superior)
-			movdqu xmm8, xmm7
-;xmm8 = p7-p7|...|p0-p0(word)(fila inferior- fila superior)
-			movdqu xmm9, xmm7
-;xmm9 = p7-p7|...|p0-p0(word)(fila inferior- fila superior)
-			paddsw xmm8, xmm8
-;xmm8 = 2(p7-p7)|...|2(p0-p70)(word)(2*(fila inferior- fila superior))
-			psrldq xmm7, 4;shift 2 word
-;xmm7 = 0|0|p7-p7|...|p2-p2(word)(fila inferior- fila superior)
-			psrldq xmm9, 2;shift 1 word 
-;xmm9 = 0|p7-p7|...|p1-p1(word)(fila inferior- fila superior)
-			paddsw xmm8, xmm7
-;xmm8 = 2(p7-p7)|2(p6-p6)|...|2(p0-p0)+(p2-p2)(word)(2*(fila inferior- fila superior))
-			paddsw xmm8, xmm9
-;xmm8 = 2(p7-p7)|2(p6-p6)+(p6-p6)|...|2(p0-p0)+(p2-p2)+(p1-p1)(word)(2*(fila inferior- fila superior))			
-			;Operador Y en xmm8
-;xmm8 = modulo del Operador Y(p1 a p5)(en word)
-
-;suma de los modulos en word
-			pabsw xmm4, xmm4
-			pabsw xmm8, xmm8
-			paddusw xmm4, xmm8
-			packuswb xmm4, xmm4;SaturateSignedWordToUnsignedByte
-			;obteniendo solo los pixeles a pisar
-			;psrldq xmm4, 10
-			;por xmm4,xmm12
-			movd dword [rsi+r14*1+1], xmm4
-			;trabaja de a 4 pixeles
-			lea rdi, [rdi+4]
-			lea rsi, [rsi+4]
-		dec edx
-		cmp edx, 0
-	jne cicloEdgeUltimaFila
-
-
-
 ;empieza el relleno de los bordes con 0
 	;mov r15, rdi; r15 img in
 	;mov rbx, rsi; rbx img out
@@ -290,24 +186,19 @@ cicloBordesDe2Bytes:
 	jne cicloBordesDe2Bytes
 	sub rbx, r14
 
-
-;DESCOMENTAR CUANDO ESTE BIEN EL FILTRADO DE LA ANTE-ULTIMA FILA
-;rbx esta mirando el ultimo byte de la fila anteior
-	inc rbx
-	inc r15
 ;rbx esta mirando el primer byte de la fila actual(la ultima)
-	;mov r12d, r14d;columnas
-	;shr r12d, 3;columnas/8
-	;pxor xmm7, xmm7
-	;movdqu [rbx], xmm7
+	mov r12d, r14d;columnas
+	shr r12d, 3;columnas/8
+	pxor xmm7, xmm7
 ;primer bloque(16 bytes) de la ultima en 0
-	;sub r12d, 2
-;rellenarUltimaFila:
-	;movdqu [rbx], xmm7
-	;add rbx, 8
-	;dec r12d
-	;cmp r12d ,0
-	;jne rellenarUltimaFila
+	add rbx, 16
+	sub r12d, 1
+rellenarUltimaFila:
+	movdqu [rbx], xmm7
+	add rbx, 8
+	dec r12d
+	cmp r12d ,0
+	jne rellenarUltimaFila
 
 	add rsp, 8
 	pop rcx
