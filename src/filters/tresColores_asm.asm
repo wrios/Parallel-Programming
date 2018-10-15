@@ -126,7 +126,7 @@ tresColores_asm:
 						movdqu xmm5, xmm3
 						pcmpgtw xmm5, xmm4; [w>84, w>84]
 						movdqu xmm4, [_170]
-						pcmpgtw xmm4, xmm2; [170>w, 170>w]
+						pcmpgtw xmm4, xmm3; [170>w, 170>w]
 						pand xmm5, xmm4; [170>w>84, 170>w>84]
 						pand xmm9, xmm5; [verde|verde] tal vez
 						movdqu xmm5, [to_2pixel]
@@ -157,6 +157,11 @@ tresColores_asm:
 						paddb xmm0, xmm9
 						
 					;cargo res en img_out
+						;devuelvo a
+						movdqu xmm1, [rdi]
+						psrld xmm1, 8*3
+						pslld xmm1, 8*3
+						paddb xmm0, xmm1
 					movdqu [rsi], xmm0				
 
 					;sigo iterando
@@ -178,6 +183,4 @@ tresColores_asm:
 		;fin
 		pop rbp
 ret
-
-
 
