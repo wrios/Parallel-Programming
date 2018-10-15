@@ -1,5 +1,5 @@
 tres: dd 0x03000000, 0x03000000, 0x03000000, 0x03000000 ; Reversado re loco little endian friendly
-cientoSetenta: dd 0xAA000000, 0xAA000000, 0xAA000000, 0xAA000000 
+_170: dd 0xAA000000, 0xAA000000, 0xAA000000, 0xAA000000 
 cientoSesentaYNueve: dd 0xA9000000, 0xA9000000, 0xA9000000, 0xA9000000 
 ochentaYCuatro: dd 0x45000000, 0x45000000, 0x45000000, 0x45000000
 muchasF: dd 0xFFFF, 0xFFFFF, 0xFFFFF, 0xFFFFF
@@ -112,22 +112,11 @@ add rax, rdi; en rax termina la imagen
     mulss xmm7, 3
     mulss xmm8, 3
 
+    paddw xmm11, xmm2
+    paddw xmm11, xmm7
+    paddw xmm11, xmm8
 
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
+    movdqu [rdi], xmm11
 
     ;sigo iterando
     add rdi, 16; aumento 4 pixeles
