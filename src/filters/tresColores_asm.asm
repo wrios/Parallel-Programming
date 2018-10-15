@@ -101,7 +101,7 @@ tresColores_asm:
 						pand xmm9, xmm5; [crema|crema] tal vez
 						movdqu xmm5, [to_2pixel]
 						pshufb xmm9, xmm5
-						psrldq xmm0, 8
+						psrldq xmm9, 8
 						paddb xmm0, xmm9
 						
 					;calculo PRIMEROS verde
@@ -131,7 +131,7 @@ tresColores_asm:
 						pand xmm9, xmm5; [verde|verde] tal vez
 						movdqu xmm5, [to_2pixel]
 						pshufb xmm9, xmm5
-						psrldq xmm0, 8
+						psrldq xmm9, 8
 						paddb xmm0, xmm9
 						
 					;calculo PRIMEROS rojo
@@ -153,7 +153,7 @@ tresColores_asm:
 						pand xmm9, xmm5; [rojo|rojo] tal vez
 						movdqu xmm5, [to_2pixel]
 						pshufb xmm9, xmm5
-						psrldq xmm0, 8
+						psrldq xmm9, 8
 						paddb xmm0, xmm9
 						
 					;cargo res en img_out
@@ -178,5 +178,6 @@ tresColores_asm:
 		;fin
 		pop rbp
 ret
+
 
 
