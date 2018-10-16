@@ -272,11 +272,10 @@ cambiaColor_asm:
 						
 						;quiero ver si el resultado esta en xmm8 o xmm0
 						;xmm5 = [0 lim>d | 0 lim>d] 
+						psllq xmm5, 4*8; [lim>d 0 | lim>d 0]
 						movdqu xmm2, xmm5
-						pslldq xmm2, 8; [0 lim>d| 0 0] snd
-						psrldq xmm5, 4; [0 0 lim>d 0] fst
-						pslldq xmm5, 8; [lim>d 0| 0 0] fst
-						paddw xmm5, xmm2; [lim>d, lim>d, 0, 0]; sumas disjuntas
+						pslldq xmm2, 4; [0 lim>d| 0 0] 
+						pxor xmm5, xmm2
 						;paso clave
 						pand xmm8, xmm5; ["res" si lim<d, 0 si no]
 						;se lo sumo al [rdi] actual
@@ -457,12 +456,11 @@ cambiaColor_asm:
 												paddb xmm8, xmm9; [0rgb|0rgb|0000|0000] = "res parcial" sumas disj
 												
 												;quiero ver si el resultado esta en xmm8 o xmm0
-												;xmm5 = [0 lim>d | 0 lim>d] 
+												;xmm5 = [lim>d | lim>d] 
+												psllq xmm5, 4*8; [lim>d 0 | lim>d 0]
 												movdqu xmm2, xmm5
-												pslldq xmm2, 8; [0 lim>d| 0 0] snd
-												psrldq xmm5, 4; [0 0 lim>d 0] fst
-												pslldq xmm5, 8; [lim>d 0| 0 0] fst
-												paddw xmm5, xmm2; [lim>d, lim>d, 0, 0]; sumas disj
+												pslldq xmm2, 4; [0 lim>d| 0 0] 
+												pxor xmm5, xmm2
 												;paso clave
 												pand xmm8, xmm5; ["res" si lim<d, 0 si no]
 												;se lo sumo al [rdi] actual
@@ -505,4 +503,3 @@ cambiaColor_asm:
 		;fin
 		pop rbp
 ret
-
