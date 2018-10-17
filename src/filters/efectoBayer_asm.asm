@@ -7,7 +7,6 @@ ROJO : db  0xFF, 0xFF, 0x2, 0xFF,		0xFF, 0xFF, 0x6, 0xFF, 		0xFF, 0xFF, 0xA, 0xF
 VERDE : db 0xFF, 0x1, 0xFF, 0xFF,		0xFF, 0x5, 0xFF, 0xFF, 		0xFF, 0x9, 0xFF, 0xFF, 		0xFF, 0xD, 0xFF, 0xFF
 AAAA : db 0xFF, 0xFF, 0xFF, 0x3,		0xFF, 0xFF, 0xFF, 0x7, 		0xFF, 0xFF, 0xFF, 0xB, 		0xFF, 0xFF, 0xFF, 0xF
 
-
 section .text
 efectoBayer_asm:
 	;i rdi = *src, img in
@@ -19,7 +18,6 @@ efectoBayer_asm:
 	;stack frame
 	push rbp ;a
 	mov rbp, rsp
-	;sub rsp, 8
 	
 	shr ecx, 2; leo de a 4
 	movdqu xmm10, [AZUL]
@@ -63,16 +61,14 @@ efectoBayer_asm:
 					paddb xmm0, xmm15; devuelvo A
 					movdqu [rsi], xmm0;;
 					;sigo iterando
-					add rsi, 16;;
-					add rdi, 16;;
+					add rsi, 16
+					add rdi, 16
 					inc r11d
 					jmp ciclo_fila_actual
 				termino_ciclo_fila_actual:
 
-				;inc fila y veo si era la ultima
+				;inc fila y sigo
 				inc r10d
-				cmp r10d, edx
-				je termino_ciclo_filas_bayer
 				inc r8
 				jmp ciclo_4_veces
 		termino_ciclo_4_veces:
@@ -107,21 +103,23 @@ efectoBayer_asm:
 					paddb xmm0, xmm15; devuelvo el A
 					movdqu [rsi], xmm0;;
 					;si sigo iterando
-					add rsi, 16;;
-					add rdi, 16;;
+					add rsi, 16
+					add rdi, 16
 					inc r11d
 					jmp ciclo_fila_actual_2
 				termino_ciclo_fila_actual_2:
 				
-				;inc fila y veo si era la ultima
+				;inc y sigo
 				inc r10d
-				cmp r10d, edx
-				je termino_ciclo_filas_bayer
 				inc r8
 				jmp ciclo_4_veces_2
 		termino_ciclo_4_veces_2:
+		
+		;veo si ya termine
+		cmp r10d, edx
+		je termino_ciclo_filas_bayer
 
-		;vuelvo a hacer ""dos"" filas
+		;vuelvo a hacer ""cuatro"" filas
 		jmp ciclo_filas_bayer
 		
 	termino_ciclo_filas_bayer:
@@ -129,7 +127,3 @@ efectoBayer_asm:
 		;fin
 		pop rbp
 		ret
-
-
-
-
