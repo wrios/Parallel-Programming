@@ -1,0 +1,30 @@
+
+Se compararán los filtros implementadas en lenguage C compilada con máximas optimizaciones (o3) y la versión ASM utilizando el set de instrucciones
+SSE. \\
+Para medir el rendimiento usaremos la cantidad de ciclos de ejecución, en particular se tomara la mediana de las mediciones.\\
+Se útilizara el registro Time Stamp Counter(TSC) que es global del procesador y se ve afectado por una serie de factores,
+como por ejemplo el scheluder para realizar un cambio de contexto, esto implicará contar muchos más ciclos (outliers)
+ que si nuestra función se ejecutara sin interrupciones, con lo cual se decide tomar la mediana que es robusta a outliers.\\
+El procesamiento digital de imágenes es el conjunto de técnicas que se aplican a las imágenes digitales con el objetivo de mejorar la calidad o facilitar la búsqueda de información. 
+
+
+\subsubsection{edgeSobel}
+Tiene cuatro diferentes tipos de iteraci\'on y un caso que es tratado de forma diferente.\\
+caso 1:\\
+	Llenado de la matriz con los pixeles procesados, se excluyen los bordes pues no se pueden aplicar los operadores.\\
+caso 2:\\
+	Llenado de los bordes de la columna 1 y n, se utiliza shift para poner los 2 bits en 0.\\
+caso 3:\\
+	Llenado de la primer y última fila, se limpia un registro xmm (pxor con el mismo) y se pisa la fila 1 y la fila n con ceros.\\
+caso 4:\\
+	El ultimo caso es para poder llenar la primer fila y la ultima con ceros, la forma de iterar es la misma pero cambia el lugar desde donde inicia cada una.\\
+
+Para la primer forma de iterar la matriz, se tomara la parte baja de un registro xmm y los 8 bytes de la parte baja serán extendidos a 8 words para que al hacer las cuentas no perdamos precisión, como se calcularán 4 pixeles, estaremos trabajando con 6 bytes, los 10 bytes restantes no se utilizarán. Esto solo sirve para llenar la parte de la matriz, por que al querer segir terandom llegaremos a la ultima posicion y necesitariamos leer 10 butes demas, pero nos salfriamos de la matriz.\\
+
+La segunda forma de iterar:\\ responde al problema que surgio anteriormente, entonces ahora al leer en un registro xmm tranjaremos con la parte alta, como necesitamos procesar 4 pixeles a la hora de acceder a la matriz necesitaremos estar 10 bytes (posiciones) atras, asi poder acceder a los 6 bytes con los que se procesan 4, luego por la forma en como iniciamos y dado que la cantidad de pixeles en la fila es muliplo de 8, no podremos  procesar los dos ultimos bytes y estos se haran como caso aparte.\\
+
+La tercer forma de iterar:\\ la matriz es accediendo al ultimo bute de la primer fila, copiar su valor en un xmm, hacer un shift de 2 nyrd para pomer os dos primeros butes en 0 y liegp em shift de 3 butes para reacomodar. com esto se puso en 0 los dos bute de los costados, lego se incementa en cantidad de columnas a la posicion y se procede de la misma forma hasta llegar a la ante-ultima fila.\\
+
+La cuarta forma de iterar:\\
+	Primer fila, primero se lee con el registro xmm y se shiftean 8 bytes, se divide la cantidad de columnas por 8 y se procede a iterar cantidad de (cantidad de pixeles en fila/8)-1 para poder llenas la primer fila.\\
+	Para la ultima fila, se lee desde 8 bytes antes y se hace un shift para poder poner en 0 los primeros 8 bytes de la ultima fila, luego se procede a iterar cantidad de (cantidad de pixeles en fila/8)-1 para poder llenar la matriz.\\
