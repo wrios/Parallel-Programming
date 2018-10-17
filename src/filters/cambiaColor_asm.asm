@@ -30,6 +30,7 @@ cambiaColor_asm:
 	movdqu xmm15, [_4_apariciones]
 	movdqu xmm3, [_256_por2]
 	movdqu xmm2, [_unos]
+	movdqu xmm14, [aaaa]
 	
 	;calculo xmm10 = [Cr Cr Cg Cb] _int
 	pxor xmm10, xmm10
@@ -40,38 +41,32 @@ cambiaColor_asm:
 	movd xmm11, r8d
 	paddd xmm10, xmm11; [0 0 Cr Cr]
 	pslldq xmm10, 4; [0 Cr Cr 0]
-	xor r8, r8
 	mov r8b, [rsp+cg]; Cg
 	movd xmm11, r8d
-	paddd xmm10, xmm11; [0 Cr Cr Cg]
+	pxor xmm10, xmm11; [0 Cr Cr Cg]
 	pslldq xmm10, 4; [Cr Cr Cg 0]
-	xor r8, r8
 	mov r8b, [rsp+cb]; Cb
 	movd xmm11, r8d
-	paddd xmm10, xmm11; [Cr Cr Cg Cb]
+	pxor xmm10, xmm11; [Cr Cr Cg Cb]
 	
 	;calculo xmm4 = [Nr Nr Ng Nb] _int
 	pxor xmm4, xmm4
-	xor r8, r8
 	mov r8b, [rsp+nr]; Nr
 	movd xmm4, r8d; [0 0 0 Nr]
 	pslldq xmm4, 4; [0 0 Nr 0]
 	movd xmm11, r8d
-	paddd xmm4, xmm11; [0 0 Nr Nr]
+	pxor xmm4, xmm11; [0 0 Nr Nr]
 	pslldq xmm4, 4; [0 Nr Nr 0]
-	xor r8, r8
 	mov r8b, [rsp+ng]; Ng
 	movd xmm11, r8d
-	paddd xmm4, xmm11; [0 Nr Nr Ng]
+	pxor xmm4, xmm11; [0 Nr Nr Ng]
 	pslldq xmm4, 4; [Nr Nr Ng 0]
-	xor r8, r8
 	mov r8b, [rsp+nb]; Nb
 	movd xmm11, r8d
-	paddd xmm4, xmm11; [Nr Nr Ng Nb]
+	pxor xmm4, xmm11; [Nr Nr Ng Nb]
 	
 	;calculo xmm1 = [lim lim lim lim] _int
 	pxor xmm1, xmm1
-	xor r8, r8
 	mov r8d, [rsp+lim]
 	movd xmm1, r8d; [0 0 0 lim]
 	pshufb xmm1, xmm15; [lim lim lim lim]
@@ -117,9 +112,10 @@ cambiaColor_asm:
 					movdqu xmm13, xmm10; [* * * Cb]
 					pshufb xmm13, xmm15; [Cb Cb Cb Cb]
 					
-					;xmm14 = r' (=2*(r+Cr))
-					movdqu xmm14, xmm6; [r r r r]
-					paddd xmm14, xmm11; [r' r' r' r']
+					movdqu xmm12, xmm13; lo voy a pisar
+					;xmm13 = r' (=2*(r+Cr))
+					movdqu xmm13, xmm6; [r r r r]
+					paddd xmm13, xmm11; [r' r' r' r']
 					;xmm6 = Δrojos²
 					psubd xmm6, xmm11
 					pmulld xmm6, xmm6
@@ -127,13 +123,13 @@ cambiaColor_asm:
 					psubd xmm7, xmm12
 					pmulld xmm7, xmm7
 					;xmm8 = Δazules²
-					psubd xmm8, xmm13
+					psubd xmm8, xmm12
 					pmulld xmm8, xmm8
 					;xmm9 = Δrojos²-Δazules²
 					movdqu xmm9, xmm6
 					psubd xmm9, xmm8
 					
-					;xmm14 = r' = [r' r' r' r']
+					;xmm13 = r' = [r' r' r' r']
 					;xmm6 = 2*Δrojos² = 2*[Δr² Δr² Δr² Δr²]
 					pslld xmm6, 1
 					;xmm7 = 4*Δverdes² = 4*[Δg² Δg² Δg² Δg²]
@@ -145,7 +141,7 @@ cambiaColor_asm:
 					;xmm9 = Δrojos²-Δazules² = [Δr²-Δb² Δr²-Δb² Δb²-Δb² Δr²-Δb²]
 
 					;all to float
-					cvtdq2ps xmm14, xmm14
+					cvtdq2ps xmm13, xmm13
 					cvtdq2ps xmm6, xmm6
 					cvtdq2ps xmm7, xmm7
 					cvtdq2ps xmm8, xmm8
@@ -154,7 +150,7 @@ cambiaColor_asm:
 					;xmm6 = [d d d d]
 					addps xmm6, xmm7; xmm6 = 2*Δr² + 4*Δg²
 					addps xmm6, xmm8; xmm6 = 2*Δr² + 4*Δg² + 3*Δb²
-					mulps xmm9, xmm14; xmm9 = r'*(Δr²-Δb²)
+					mulps xmm9, xmm13; xmm9 = r'*(Δr²-Δb²)
 					divps xmm9, xmm3; xmm9 = r*(Δr²-Δb²)/256
 					addps xmm6, xmm9; xmm6 = 2Δr²+4Δg²+3Δb²+r(Δr²-Δb²)/256 = [d² d² d² d²]
 					sqrtps xmm6, xmm6; xmm6 = [d d d d]
@@ -242,14 +238,13 @@ cambiaColor_asm:
 					pand xmm0, xmm5
 					
 					;xmm0 = resultado posta
-					paddb xmm0, xmm6			
+					pxor xmm0, xmm6			
 									
 					;cargo a la img out
 						;le pongo a
-						movdqu xmm7, [aaaa]
 						pslld xmm0, 8*1
 						psrld xmm0, 8*1
-						paddb xmm0, xmm7
+						pxor xmm0, xmm14
 					movdqu [rsi], xmm0
 
 					;sigo iterando
