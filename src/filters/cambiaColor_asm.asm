@@ -3,6 +3,7 @@ section .data
 _4_apariciones : db 0x0, 0x1, 0x2, 0x3,   0x0, 0x1, 0x2, 0x3,   0x0, 0x1, 0x2, 0x3,   0x0, 0x1, 0x2, 0x3
 _256_por2 : dd 512.0, 512.0, 512.0, 512.0
 _unos : dd 1.0, 1.0, 1.0, 1.0
+aaaa: db 0x0, 0x0, 0x0, 0xff, 0x0, 0x0, 0x0, 0xff, 0x0, 0x0, 0x0, 0xff, 0x0, 0x0, 0x0, 0xff
 
 section .text
 global cambiaColor_asm
@@ -31,36 +32,46 @@ cambiaColor_asm:
 	movdqu xmm2, [_unos]
 	
 	;calculo xmm10 = [Cr Cr Cg Cb] _int
+	pxor xmm10, xmm10
+	xor r8, r8
 	mov r8b, [rsp+cr]; Cr
 	movd xmm10, r8d; [0 0 0 Cr]
 	pslldq xmm10, 4; [0 0 Cr 0]
 	movd xmm11, r8d
 	paddd xmm10, xmm11; [0 0 Cr Cr]
 	pslldq xmm10, 4; [0 Cr Cr 0]
+	xor r8, r8
 	mov r8b, [rsp+cg]; Cg
 	movd xmm11, r8d
 	paddd xmm10, xmm11; [0 Cr Cr Cg]
 	pslldq xmm10, 4; [Cr Cr Cg 0]
-	mov r8b, [rsp+cb]
+	xor r8, r8
+	mov r8b, [rsp+cb]; Cb
 	movd xmm11, r8d
 	paddd xmm10, xmm11; [Cr Cr Cg Cb]
 	
 	;calculo xmm4 = [Nr Nr Ng Nb] _int
+	pxor xmm4, xmm4
+	xor r8, r8
 	mov r8b, [rsp+nr]; Nr
 	movd xmm4, r8d; [0 0 0 Nr]
 	pslldq xmm4, 4; [0 0 Nr 0]
 	movd xmm11, r8d
 	paddd xmm4, xmm11; [0 0 Nr Nr]
 	pslldq xmm4, 4; [0 Nr Nr 0]
+	xor r8, r8
 	mov r8b, [rsp+ng]; Ng
 	movd xmm11, r8d
 	paddd xmm4, xmm11; [0 Nr Nr Ng]
 	pslldq xmm4, 4; [Nr Nr Ng 0]
+	xor r8, r8
 	mov r8b, [rsp+nb]; Nb
 	movd xmm11, r8d
 	paddd xmm4, xmm11; [Nr Nr Ng Nb]
 	
 	;calculo xmm1 = [lim lim lim lim] _int
+	pxor xmm1, xmm1
+	xor r8, r8
 	mov r8d, [rsp+lim]
 	movd xmm1, r8d; [0 0 0 lim]
 	pshufb xmm1, xmm15; [lim lim lim lim]
@@ -234,6 +245,11 @@ cambiaColor_asm:
 					paddb xmm0, xmm6			
 									
 					;cargo a la img out
+						;le pongo a
+						movdqu xmm7, [aaaa]
+						pslld xmm0, 8*1
+						psrld xmm0, 8*1
+						paddb xmm0, xmm7
 					movdqu [rsi], xmm0
 
 					;sigo iterando
@@ -255,3 +271,4 @@ cambiaColor_asm:
 		;fin
 		pop rbp
 ret
+
