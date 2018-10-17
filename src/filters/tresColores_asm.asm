@@ -10,7 +10,6 @@ _3333: dd 3.0, 3.0, 3.0, 3.0
 
 primeros_dos_pixeles: db 0x8, 0xff, 0x9, 0xff,   0xa, 0xff, 0xb, 0xff,   0xc, 0xff, 0xd, 0xff,   0xe, 0xff, 0xf, 0xff
 to_2pixel: db 0xff, 0xff, 0xff, 0xff,   0xff, 0xff, 0xff, 0xff,   0x0, 0x2, 0x4, 0x6,   0x8, 0xa, 0xc, 0xe 
-aaaa: db 0x0, 0x0, 0x0, 0xff,    0x0, 0x0, 0x0, 0xff,    0x0, 0x0, 0x0, 0xff,    0x0, 0x0, 0x0, 0xff
 
 global tresColores_asm
 
@@ -30,6 +29,11 @@ tresColores_asm:
 	movdqu xmm14, [verde]
 	movdqu xmm15, [rojo]
 	movdqu xmm12, [_3333]
+	movdqu xmm6, [_84]
+	movdqu xmm7, [_85]
+	movdqu xmm10, [_169]
+	movdqu xmm11, [_170]
+	movdqu xmm8, [to_2pixel]
 
 	;recorro todas las filas
 	mov r10d, 0
@@ -85,22 +89,22 @@ tresColores_asm:
 					movdqu xmm9, xmm13; CREMA
 					paddw xmm9, xmm2
 					psrlw xmm9, 2;=/4
-						movdqu xmm4, [_169]
+						movdqu xmm4, xmm10; 169
 						movdqu xmm5, xmm2
 						pcmpgtw xmm5, xmm4; [w>169, w>169]
 						pand xmm9, xmm5; [crema|crema] tal vez
-						movdqu xmm5, [to_2pixel]
+						movdqu xmm5, xmm8; to_2pixel
 						pshufb xmm9, xmm5
 						paddb xmm0, xmm9
 					;calculo SEGUNDOS crema
 					movdqu xmm9, xmm13; CREMA
 					paddw xmm9, xmm3
 					psrlw xmm9, 2;=/4
-						movdqu xmm4, [_169]
+						movdqu xmm4, xmm10; 169
 						movdqu xmm5, xmm3
 						pcmpgtw xmm5, xmm4; [w>169, w>169]
 						pand xmm9, xmm5; [crema|crema] tal vez
-						movdqu xmm5, [to_2pixel]
+						movdqu xmm5, xmm8; to_2pixel
 						pshufb xmm9, xmm5
 						psrldq xmm9, 8
 						paddb xmm0, xmm9
@@ -109,28 +113,28 @@ tresColores_asm:
 					movdqu xmm9, xmm14; VERDE
 					paddw xmm9, xmm2
 					psrlw xmm9, 2;=/4
-						movdqu xmm4, [_84]
+						movdqu xmm4, xmm6; 84
 						movdqu xmm5, xmm2
 						pcmpgtw xmm5, xmm4; [w>84, w>84]
-						movdqu xmm4, [_170]
+						movdqu xmm4, xmm11; 170
 						pcmpgtw xmm4, xmm2; [170>w, 170>w]
 						pand xmm5, xmm4; [170>w>84, 170>w>84]
 						pand xmm9, xmm5; [verde|verde] tal vez
-						movdqu xmm5, [to_2pixel]
+						movdqu xmm5, xmm8; to_2pixel
 						pshufb xmm9, xmm5
 						paddb xmm0, xmm9
 					;calculo SEGUNDOS verde
 					movdqu xmm9, xmm14; VERDE
 					paddw xmm9, xmm3
 					psrlw xmm9, 2;=/4
-						movdqu xmm4, [_84]
+						movdqu xmm4, xmm6; 84
 						movdqu xmm5, xmm3
 						pcmpgtw xmm5, xmm4; [w>84, w>84]
-						movdqu xmm4, [_170]
+						movdqu xmm4, xmm11; 170
 						pcmpgtw xmm4, xmm3; [170>w, 170>w]
 						pand xmm5, xmm4; [170>w>84, 170>w>84]
 						pand xmm9, xmm5; [verde|verde] tal vez
-						movdqu xmm5, [to_2pixel]
+						movdqu xmm5, xmm8; to_2pixel
 						pshufb xmm9, xmm5
 						psrldq xmm9, 8
 						paddb xmm0, xmm9
@@ -139,35 +143,37 @@ tresColores_asm:
 					movdqu xmm9, xmm15; ROJO
 					paddw xmm9, xmm2
 					psrlw xmm9, 2;=/4
-						movdqu xmm5, [_85]
+						movdqu xmm5, xmm7; 85
 						pcmpgtw xmm5, xmm2; [85>w, 85>w]
 						pand xmm9, xmm5; [rojo|rojo] tal vez
-						movdqu xmm5, [to_2pixel]
+						movdqu xmm5, xmm8; to_2pixel
 						pshufb xmm9, xmm5
 						paddb xmm0, xmm9
 					;calculo SEGUNDOS rojo
 					movdqu xmm9, xmm15; ROJO
 					paddw xmm9, xmm3
 					psrlw xmm9, 2;=/4
-						movdqu xmm5, [_85]
+						movdqu xmm5, xmm7; 85
 						pcmpgtw xmm5, xmm3; [85>w, 85>w]
 						pand xmm9, xmm5; [rojo|rojo] tal vez
-						movdqu xmm5, [to_2pixel]
+						movdqu xmm5, xmm8; to_2pixel
 						pshufb xmm9, xmm5
 						psrldq xmm9, 8
 						paddb xmm0, xmm9
 						
 					;cargo res en img_out
 						;agrego a
-						movdqu xmm1, [aaaa]
+						pcmpeqd xmm1, xmm1
+						psrld xmm1, 8*3
+						pslld xmm1, 8*3
 						pslld xmm0, 8*1
 						psrld xmm0, 8*1
 						paddb xmm0, xmm1
 					movdqu [rsi], xmm0				
 
 					;sigo iterando
-					add rsi, 16;;
-					add rdi, 16;;
+					add rsi, 16
+					add rdi, 16
 					inc r11d
 					jmp ciclo_fila_actual
 				termino_ciclo_fila_actual:
@@ -184,4 +190,3 @@ tresColores_asm:
 		;fin
 		pop rbp
 ret
-
