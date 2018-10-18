@@ -9,6 +9,8 @@
 #include "helper/utils.h"
 #include "helper/imagenes.h"
 
+#define N 100
+
 // ~~~ seteo de los filtros ~~~
 
 extern filtro_t tresColores;
@@ -85,21 +87,35 @@ void imprimir_tiempos_ejecucion(unsigned long long int start, unsigned long long
 	printf("  # de ciclos insumidos por llamada : %.3f\n", (float)cant_ciclos/(float)cant_iteraciones);
 }
 
+int compare(const void * a, const void * b) 
+{ 
+    return ( *(int*)a - *(int*)b ); 
+} 
+
 void correr_filtro_imagen(configuracion_t *config, aplicador_fn_t aplicador)
 {
 	imagenes_abrir(config);
-
+	FILE *pfile = fopen(config->nombre_filtro,"a");
+	unsigned long long mediciones[N];
 	unsigned long long start, end;
 
-	MEDIR_TIEMPO_START(start)
+	
 	for (int i = 0; i < config->cant_iteraciones; i++) {
+			MEDIR_TIEMPO_START(start)
 			aplicador(config);
+			MEDIR_TIEMPO_STOP(end)
+			imprimir_tiempos_ejecucion(start, end, config->cant_iteraciones);
+			unsigned long long int cant_ciclos = end-start;
+			fprintf(pfile,"%llu\n", cant_ciclos);
+			mediciones[i] = cant_ciclos;
 	}
-	MEDIR_TIEMPO_STOP(end)
+	qsort(mediciones,N,sizeof(double),compare);
+	fprintf(pfile,"%llu\n", mediciones[(N/2)-1]);
+	fclose(pfile);
 
 	imagenes_guardar(config);
 	imagenes_liberar(config);
-	imprimir_tiempos_ejecucion(start, end, config->cant_iteraciones);
+	
 }
 
 
