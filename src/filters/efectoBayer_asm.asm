@@ -19,7 +19,7 @@ efectoBayer_asm:
 	push rbp ;a
 	mov rbp, rsp
 	
-	shr ecx, 2; leo de a 4
+	shr edx, 2; leo de a 4
 	movdqu xmm10, [AZUL]
 	movdqu xmm11, [ROJO]
 	movdqu xmm12, [VERDE]
@@ -28,7 +28,7 @@ efectoBayer_asm:
 	;recorro todas las filas
 	mov r10d, 0
 	ciclo_filas_bayer:
-		cmp r10d, edx; r10d = fila actual
+		cmp r10d, ecx; r10d = fila actual
 		je termino_ciclo_filas_bayer
 		
 			mov r8b, 0
@@ -39,7 +39,7 @@ efectoBayer_asm:
 					mov r11d, 0
 					ciclo_fila_actual:
 					
-					cmp r11d, ecx; r11d = columna actual
+					cmp r11d, edx; r11d = columna actual
 					je termino_ciclo_fila_actual
 					movdqu xmm0, [rdi];
 					movdqu xmm15, xmm0
@@ -80,7 +80,7 @@ efectoBayer_asm:
 				;recorro la siguiente fila
 					mov r11d, 0
 					ciclo_fila_actual_2:
-					cmp r11d, ecx; r11d = col actual
+					cmp r11d, edx; r11d = col actual
 					je termino_ciclo_fila_actual_2
 					
 					movdqu xmm0, [rdi];
@@ -116,7 +116,7 @@ efectoBayer_asm:
 		termino_ciclo_4_veces_2:
 		
 		;veo si ya termine
-		cmp r10d, edx
+		cmp r10d, ecx
 		je termino_ciclo_filas_bayer
 
 		;vuelvo a hacer ""cuatro"" filas

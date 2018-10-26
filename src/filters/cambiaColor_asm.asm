@@ -26,7 +26,7 @@ cambiaColor_asm:
 	push rbp ;a
 	mov rbp, rsp
 		
-	shr ecx, 2; leo de a 4
+	shr edx, 2; leo de a 4
 	movdqu xmm15, [_4_apariciones]
 	movdqu xmm3, [_256_por2]
 	movdqu xmm2, [_unos]
@@ -74,13 +74,13 @@ cambiaColor_asm:
 	;recorro todas las filas
 	mov r10d, 0
 	ciclo_filas:
-		cmp r10d, edx; r10d = fila actual
+		cmp r10d, ecx; r10d = fila actual
 		je termino_ciclo_filas
 		
 				;recorro esta fila
 					mov r11d, 0
 					ciclo_fila_actual:
-					cmp r11d, ecx; r11d = columna actual
+					cmp r11d, edx; r11d = columna actual
 					je termino_ciclo_fila_actual
 					
 					movdqu xmm0, [rdi]; [argb|argb|argb|argb]
@@ -257,7 +257,7 @@ cambiaColor_asm:
 		;inc fila y sigo
 		;iterando o termino
 		inc r10d
-		cmp r10d, edx
+		cmp r10d, ecx
 		je termino_ciclo_filas
 		jmp ciclo_filas
 		

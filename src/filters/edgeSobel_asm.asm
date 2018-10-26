@@ -2,13 +2,6 @@ global edgeSobel_asm
 
 section .data
 
-%define off_next_proceso 4
-%define off_8B 8
-%define div_4 2
-mask_negar: db 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
-mask_4: db 0xFF,0xFF,0xFF,0xFF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-mask_255: db 0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF
-mask_dejar4: db 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xFF,0xFF,0xFF,0xFF
 section .text
 
 edgeSobel_asm:
@@ -24,35 +17,27 @@ edgeSobel_asm:
     ;stack frame
 	push rbp
 	mov rbp, rsp
-	push r12
-	push r13
-	push r14
-	push r15
 	push rbx
-	push rdi
-	push rsi
-	push rdx
-	push rcx
 	sub rsp, 8
 
-	mov r15, rdi; r15 img in
+	mov r10, rdi; r10 img in
 	mov rbx, rsi; rbx img out
-	mov r14d, edx; r14 cantidad de columnas
+	mov r8d, edx; r8 cantidad de columnas
 	;cantidad de iteraciones sin contar la ultima fila
 	;la ultima fila tiene el proceso un poco diferente por lectura invalida
-	mov r13d, ecx; r13 cantidad de filas
+	mov r9d, ecx; r9 cantidad de filas
 	sub ecx, 3
 	;se recorre n-3 filas con el loop
 	cicloFilasEdge:
-		mov r12d, edx; r12 cantidad de columnas
+		mov r11d, edx; r11 cantidad de columnas
 		;se mueve de a 4 pixeles
-		shr r12d, 2
+		shr r11d, 2
 		cicloColumnasEdge:
 
 			;cargando primer bloque de pixeles
-			movdqu xmm1,[rdi+r14*0]
-			movdqu xmm2,[rdi+r14*1]
-			movdqu xmm3,[rdi+r14*2]
+			movdqu xmm1,[rdi+r8*0]
+			movdqu xmm2,[rdi+r8*1]
+			movdqu xmm3,[rdi+r8*2]
 			;guardando(para empaquetar) parte baja del bloque a modificar
 			pxor xmm15, xmm15
 			movdqu xmm4, xmm1
@@ -118,12 +103,12 @@ edgeSobel_asm:
 			pabsw xmm8, xmm8
 			paddusw xmm4, xmm8
 			packuswb xmm4, xmm4;SaturateSignedWordToUnsignedByte
-			movdqu [rsi+r14*1+1], xmm4
+			movdqu [rsi+r8*1+1], xmm4
 			;trabaja de a 4 pixeles
 			lea rdi, [rdi+4]
 			lea rsi, [rsi+4]
-		dec r12d
-		cmp r12d, 0
+		dec r11d
+		cmp r11d, 0
 		jne cicloColumnasEdge
 	dec ecx
 	cmp ecx, 0
@@ -132,7 +117,7 @@ edgeSobel_asm:
 ;procesando ultima fila
 ;rdi quedo en el inicio de la fila n-3 y voy a procesar el ultimo
 ;rsi "analogo"
-	mov ecx, r14d;columnas
+	mov ecx, r8d;columnas
 	shr ecx, 2;columnas/4
 	;se procesa los ultimos bytes, entonces retroceso 12
 	;para que los 4 que proceso sean los 4 primeros de la ultima fila
@@ -144,9 +129,9 @@ edgeSobel_asm:
 	cicloEdgeUltimaFila:
 	
 		;cargando primer bloque de pixeles
-			movdqu xmm1,[rdi+r14*0]
-			movdqu xmm2,[rdi+r14*1]
-			movdqu xmm3,[rdi+r14*2]
+			movdqu xmm1,[rdi+r8*0]
+			movdqu xmm2,[rdi+r8*1]
+			movdqu xmm3,[rdi+r8*2]
 			;guardando(para empaquetar) parte baja del bloque a modificar
 			pxor xmm15, xmm15
 			movdqu xmm4, xmm1
@@ -214,7 +199,7 @@ edgeSobel_asm:
 			paddusw xmm4, xmm8
 			packuswb xmm4, xmm4;SaturateSignedWordToUnsignedByte
 			psrldq xmm4, 4;shift 1 word
-			movd dword [rsi+r14*1+11], xmm4
+			movd dword [rsi+r8*1+11], xmm4
 			;trabaja de a 4 pixeles
 			add rdi, 4
 			add rsi, 4
@@ -228,9 +213,9 @@ edgeSobel_asm:
 	sub rsi, 2
 
 	;cargando primer bloque de pixeles
-			movdqu xmm1,[rdi+r14*0]
-			movdqu xmm2,[rdi+r14*1]
-			movdqu xmm3,[rdi+r14*2]
+			movdqu xmm1,[rdi+r8*0]
+			movdqu xmm2,[rdi+r8*1]
+			movdqu xmm3,[rdi+r8*2]
 			;guardando(para empaquetar) parte baja del bloque a modificar
 			pxor xmm15, xmm15
 			movdqu xmm4, xmm1
@@ -298,49 +283,49 @@ edgeSobel_asm:
 			paddusw xmm4, xmm8
 			packuswb xmm4, xmm4;SaturateSignedWordToUnsignedByte
 			psrldq xmm4, 4;shift 1 word
-			movd dword [rsi+r14*1+11], xmm4
+			movd dword [rsi+r8*1+11], xmm4
 
 ;Fin ultimos 4 bytes
 
 ;empieza el relleno de los bordes con 0
-	;mov r15, rdi; r15 img in
+	;mov r10, rdi; r10 img in
 	;mov rbx, rsi; rbx img out
 	
-	mov r12d, r14d;columnas
-	shr r12d, 3;columnas/8
+	mov r11d, r8d;columnas
+	shr r11d, 3;columnas/8
 	
-	;r13d cantidade de filas
-	;r15 img in
+	;r9d cantidade de filas
+	;r10 img in
 	;rbx img out
 	pxor xmm7, xmm7
 	;pisa de 16 byte (hace 1 paso menos ya que pisaria los siguientes 8 bytes de la fila superior)
-	dec r12d
+	dec r11d
 rellenarPrimerFila:
-	movq xmm7, [r15]
+	movq xmm7, [r10]
 ; xmm7 = [p_{fila+6} p_{fila+5} p_{fila+4} p_{fila+3} p_{fila+2} p_{fila+1} p_{fila} p_{fila-1}]
 	psrldq xmm7, 8
 	pslldq xmm7, 8
 ; xmm7 = [p_{fila+6} p_{fila+5} p_{fila+4} p_{fila+3} p_{fila+2} p_{fila+1} 0 0]
 	movdqu [rbx], xmm7
 	add rbx, 8
-	add r15, 8
-	dec r12d
-	cmp r12d, 0
+	add r10, 8
+	dec r11d
+	cmp r11d, 0
 	jne rellenarPrimerFila
 	add rbx, 8
-	add r15, 8
+	add r10, 8
 
 
-	;mov r12d cantidad de filas
-	mov r12d, r13d
+	;mov r11d cantidad de filas
+	mov r11d, r9d
 	;cantidad de filas(bordes de 2 Bytes) a procesar igual a cantidad de filas-1
-	sub r12d, 1
+	sub r11d, 1
 ;se pisa el ultimo byte de la fila actual y el primer byte de la fila siguiente
 ;retrocede uno para poder pisar el ultimo byte de la fila anterior
 	sub rbx,1
-	;sub r15,1
+	;sub r10,1
 ;rbx img out
-;r15 img in
+;r10 img in
 cicloBordesDe2Bytes:
 	movdqu xmm7, [rbx]
 ; xmm7 = [p_{fila+6} p_{fila+5} p_{fila+4} p_{fila+3} p_{fila+2} p_{fila+1} p_{fila} p_{fila-1}]
@@ -348,27 +333,27 @@ cicloBordesDe2Bytes:
 	pslldq xmm7, 2
 ; xmm7 = [p_{fila+6} p_{fila+5} p_{fila+4} p_{fila+3} p_{fila+2} p_{fila+1} 0 0]
 	movdqu [rbx], xmm7
-	;r14d cantidad de columnas
-	add r15, r14
-	add rbx, r14
-	dec r12d
-	cmp r12d, 0
+	;r8d cantidad de columnas
+	add r10, r8
+	add rbx, r8
+	dec r11d
+	cmp r11d, 0
 	jne cicloBordesDe2Bytes
-	sub rbx, r14
+	sub rbx, r8
 ;rbx esta mirando el último byte de la ante-última
 	sub rbx, 7
 
 
 
-	mov r12d, r14d;columnas
-	shr r12d, 3;columnas/8
+	mov r11d, r8d;columnas
+	shr r11d, 3;columnas/8
 	
-	;r13d cantidade de filas
-	;r15 img in
+	;r9d cantidade de filas
+	;r10 img in
 	;rbx img out
 	pxor xmm7, xmm7
 	;pisa de 16 byte (hace 1 paso menos ya que pisaria los siguientes 8 bytes de la fila superior)
-	;dec r12d
+	;dec r11d
 rellenarUltimaFila:
 	movq xmm7, [rbx]
 ; xmm7 = [p_{fila+6} p_{fila+5} p_{fila+4} p_{fila+3} p_{fila+2} p_{fila+1} p_{fila} p_{fila-1}]
@@ -377,21 +362,13 @@ rellenarUltimaFila:
 ; xmm7 = [p_{fila+6} p_{fila+5} p_{fila+4} p_{fila+3} p_{fila+2} p_{fila+1} 0 0]
 	movdqu [rbx], xmm7
 	add rbx, 8
-	add r15, 8
-	dec r12d
-	cmp r12d, 0
+	add r10, 8
+	dec r11d
+	cmp r11d, 0
 	jne rellenarUltimaFila
 
 
 	add rsp, 8
-	pop rcx
-	pop rdx
-	pop rsi
-	pop rdi
 	pop rbx
-	pop r15
-	pop r14
-	pop r13
-	pop r12
 	pop rbp
 	ret																											
